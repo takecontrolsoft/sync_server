@@ -1,2 +1,2 @@
-# sync-server
+# sync server
 Go server for processing files
