@@ -1,23 +1,23 @@
 // Package serverapi provides API for files synchronization
-package serverapi
+package api
 
 import (
 	"fmt"
 	"log"
 	"net/http"
-)
 
-var uploadDirectory string
-var maxUploadFileSize int64
+	"takecontrolsoft.eu/sync/server/config"
+	"takecontrolsoft.eu/sync/server/impl"
+)
 
 // Initial entry point for configuring and starting th server
 func Configure(uploadDirectoryParam string, portParam string, maxUploadFileSizeParam int64) {
-	uploadDirectory = uploadDirectoryParam
-	maxUploadFileSize = maxUploadFileSizeParam
+	config.UploadDirectory = uploadDirectoryParam
+	config.MaxUploadFileSize = maxUploadFileSizeParam
 
-	http.HandleFunc("/uploadFile", uploadFileHandler())
+	http.HandleFunc("/upload", impl.UploadHandler())
 
-	fs := http.FileServer(http.Dir(uploadDirectory))
+	fs := http.FileServer(http.Dir(config.UploadDirectory))
 	http.Handle("/files/", http.StripPrefix("/files", fs))
 
 	log.Printf("Server started on localhost port: %s", portParam)

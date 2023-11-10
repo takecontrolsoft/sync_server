@@ -1,4 +1,4 @@
-module tcsi/sync_server
+module takecontrolsoft.eu/sync
 
 go 1.21.3
 
