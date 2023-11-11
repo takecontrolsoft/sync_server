@@ -28,5 +28,5 @@ func ErrEnvVariableSetEmpty(envVariableName string) *errors.Error {
 	return errors.Errorf("Environment variable %s is empty.", envVariableName)
 }
 
-// An error for empty value for an environment variable that is needed to run the sync server.
+// An error for empty storage path.
 var ErrStoragePathEmpty = errors.Errorf("Storage path is empty.")

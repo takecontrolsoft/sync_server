@@ -13,30 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package services registers the APIs for the sync server.
 package services
 
 import (
 	"fmt"
-	"net/http"
-
-	"github.com/takecontrolsoft/sync/server/config"
-	host "github.com/takecontrolsoft/sync/server/host"
-	"github.com/takecontrolsoft/sync/server/impl"
 )
 
-type FilesManagementService struct{}
-
-func (s FilesManagementService) Host() bool {
-	fmt.Println("FilesManagementService::Host()")
-	http.HandleFunc("/upload", impl.UploadHandler())
-
-	fs := http.FileServer(http.Dir(config.UploadDirectory))
-	http.Handle("/files", http.StripPrefix("/files", fs))
-
-	return true
-}
-
-func init() {
-	host.RegisterWebService(FilesManagementService{})
+// This method allows package 'service' to be imported.
+func Load() {
+	fmt.Println("Importing Sync server web services ...")
 }
