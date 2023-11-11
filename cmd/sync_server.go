@@ -13,18 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package sync configures and starts the sync server.
-package main
+// Package sync_server configures and starts the sync server.
+package sync_server
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	e "internal/errors_util"
 	"os"
+	"reflect"
 
 	"github.com/takecontrolsoft/sync/server/config"
 	"github.com/takecontrolsoft/sync/server/host"
-	"github.com/takecontrolsoft/sync/server/services"
 )
 
 func main() {
@@ -44,20 +44,47 @@ func main() {
 	flag.Parse()
 
 	if argCount := len(os.Args[1:]); argCount == 0 {
-		config.InitFromEnvVariables()
-	} else {
+
+		scanner := bufio.NewScanner(os.Stdin)
 		if directory == "" {
-			e.CrashOnError(config.ErrStoragePathEmpty)
+			fmt.Printf("Please enter storage path location in DOS or UNC format:")
+			for scanner.Scan() {
+				directory = scanner.Text()
+				if directory != "" {
+					if _, err := os.Stat(directory); os.IsNotExist(err) {
+						fmt.Printf("Directory '%s' does not exist. Please enter a valid path.", directory)
+					} else {
+						break
+					}
+				}
+				fmt.Println("")
+			}
+		}
+		config.UploadDirectory = directory
+
+		if port == 80 {
+			fmt.Printf("Please enter TCP port number. (default: 80):")
+			for scanner.Scan() {
+				v := scanner.Text()
+				if v != "" {
+					_, err := fmt.Sscan(v, &port)
+					if err != nil {
+						fmt.Println(v, err, reflect.TypeOf(port))
+					} else {
+						break
+					}
+				} else {
+					port = 80
+					break
+				}
+			}
 		}
 		config.PortNumber = port
-		config.UploadDirectory = directory
 	}
-
 	fmt.Println("Starting Sync server ...")
 
 	fmt.Printf(" - port = %d\n", config.PortNumber)
 	fmt.Printf(" - storage path = %s\n", config.UploadDirectory)
 
-	services.Load()
 	host.Run()
 }
