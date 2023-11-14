@@ -35,39 +35,37 @@ import (
 // - the file already exists;
 // - the maximum allowed size is exceeded;
 // - the file format is not allowed;
-func UploadHandler() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Body = http.MaxBytesReader(w, r.Body, config.MaxUploadFileSize)
-		reader, err := r.MultipartReader()
-		if utils.RenderIfError(err, w, http.StatusBadRequest) {
-			return
-		}
-		mp, err := reader.NextPart()
-		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-			return
-		}
+func UploadHandler(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, config.MaxUploadFileSize)
+	reader, err := r.MultipartReader()
+	if utils.RenderIfError(err, w, http.StatusBadRequest) {
+		return
+	}
+	mp, err := reader.NextPart()
+	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+		return
+	}
 
-		b := bufio.NewReader(mp)
-		success := validateFileType(b, w)
-		if !success {
-			return
-		}
-		f, success := createNewFile(mp, w)
-		if !success {
-			return
-		}
-		var maxSize int64 = config.MaxUploadFileSize
-		lmt := io.MultiReader(b, io.LimitReader(mp, maxSize-511))
-		written, err := io.Copy(f, lmt)
-		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-			return
-		}
-		if written > maxSize {
-			os.Remove(f.Name())
-			utils.RenderMessage(w, "FILE_SIZE_EXCEEDED", http.StatusBadRequest)
-			return
-		}
-	})
+	b := bufio.NewReader(mp)
+	success := validateFileType(b, w)
+	if !success {
+		return
+	}
+	f, success := createNewFile(mp, w)
+	if !success {
+		return
+	}
+	var maxSize int64 = config.MaxUploadFileSize
+	lmt := io.MultiReader(b, io.LimitReader(mp, maxSize-511))
+	written, err := io.Copy(f, lmt)
+	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+		return
+	}
+	if written > maxSize {
+		os.Remove(f.Name())
+		utils.RenderMessage(w, "FILE_SIZE_EXCEEDED", http.StatusBadRequest)
+		return
+	}
 }
 
 func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, bool) {
