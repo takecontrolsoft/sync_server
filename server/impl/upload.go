@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"io"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,54 +30,74 @@ import (
 )
 
 // Upload file handler for uploading large streamed files.
+// A new file is saved under a directory named like the client device.
+// An error will be rendered in the response if:
+// - the file already exists;
+// - the maximum allowed size is exceeded;
+// - the file format is not allowed;
 func UploadHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, config.MaxUploadFileSize)
 		reader, err := r.MultipartReader()
-		if utils.OnError(err, w, http.StatusBadRequest) {
+		if utils.RenderIfError(err, w, http.StatusBadRequest) {
 			return
 		}
 		mp, err := reader.NextPart()
-		if utils.OnError(err, w, http.StatusInternalServerError) {
+		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 			return
 		}
-
-		_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
-		if utils.OnError(err, w, http.StatusInternalServerError) {
-			return
-		}
-		deviceId := params["name"]
-		filename := params["filename"]
 
 		b := bufio.NewReader(mp)
-		n, _ := b.Peek(512)
-		fileType := http.DetectContentType(n)
-		if !utils.ValidateType(fileType, w) {
-			utils.RenderError(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
+		success := validateFileType(b, w)
+		if !success {
 			return
 		}
-
-		dirName := filepath.Join(config.UploadDirectory, deviceId)
-		err = os.MkdirAll(dirName, os.ModePerm)
-		if utils.OnError(err, w, http.StatusInternalServerError) {
+		f, success := createNewFile(mp, w)
+		if !success {
 			return
 		}
-		filePath := filepath.Join(dirName, filename)
-		f, err := os.Create(filePath)
-		if utils.OnError(err, w, http.StatusInternalServerError) {
-			return
-		}
-		defer f.Close()
 		var maxSize int64 = config.MaxUploadFileSize
 		lmt := io.MultiReader(b, io.LimitReader(mp, maxSize-511))
 		written, err := io.Copy(f, lmt)
-		if utils.OnError(err, w, http.StatusInternalServerError) {
+		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 			return
 		}
 		if written > maxSize {
 			os.Remove(f.Name())
-			utils.RenderError(w, "FILE_SIZE_EXCEEDED", http.StatusBadRequest)
+			utils.RenderMessage(w, "FILE_SIZE_EXCEEDED", http.StatusBadRequest)
 			return
 		}
 	})
+}
+
+func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, bool) {
+	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
+	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+		return nil, false
+	}
+	deviceId := params["name"]
+	filename := params["filename"]
+
+	dirName := filepath.Join(config.UploadDirectory, deviceId)
+	err = os.MkdirAll(dirName, os.ModePerm)
+	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+		return nil, false
+	}
+	filePath := filepath.Join(dirName, filename)
+	f, err := os.Create(filePath)
+	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+		return nil, false
+	}
+	defer f.Close()
+	return f, true
+}
+
+func validateFileType(b *bufio.Reader, w http.ResponseWriter) bool {
+	n, _ := b.Peek(512)
+	fileType := http.DetectContentType(n)
+	if !utils.IsAllowedFileType(fileType, w) {
+		utils.RenderMessage(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
+		return false
+	}
+	return true
 }
