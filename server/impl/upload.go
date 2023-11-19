@@ -18,6 +18,7 @@ package impl
 
 import (
 	"bufio"
+	"internal/errors_util"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -25,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/flytam/filenamify"
 	"github.com/takecontrolsoft/sync/server/config"
 	"github.com/takecontrolsoft/sync/server/utils"
 )
@@ -47,14 +49,17 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := bufio.NewReader(mp)
-	success := validateFileType(b, w)
-	if !success {
+	err = validateFileType(b, w)
+	if utils.RenderIfError(err, w, http.StatusBadRequest) {
 		return
 	}
-	f, success := createNewFile(mp, w)
-	if !success {
+
+	f, err := createNewFile(mp, w)
+	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
+	defer f.Close()
+
 	var maxSize int64 = config.MaxUploadFileSize
 	lmt := io.MultiReader(b, io.LimitReader(mp, maxSize-511))
 	written, err := io.Copy(f, lmt)
@@ -63,39 +68,55 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if written > maxSize {
 		os.Remove(f.Name())
-		utils.RenderMessage(w, "FILE_SIZE_EXCEEDED", http.StatusBadRequest)
+		utils.RenderMessage(w, FileSizeExceeded.Error(), http.StatusBadRequest)
 		return
 	}
 }
 
-func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, bool) {
+func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, error) {
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
-	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-		return nil, false
+	if err != nil {
+		errors_util.LogError(err)
+		return nil, err
 	}
-	deviceId := params["name"]
-	filename := params["filename"]
 
+	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{
+		Replacement: "0",
+		MaxLength:   10,
+	})
+	if err != nil {
+		errors_util.LogError(err)
+		return nil, err
+	}
+	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{
+		Replacement: "0",
+	})
+	if err != nil {
+		errors_util.LogError(err)
+		return nil, err
+	}
 	dirName := filepath.Join(config.UploadDirectory, deviceId)
 	err = os.MkdirAll(dirName, os.ModePerm)
-	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-		return nil, false
+	if err != nil {
+		errors_util.LogError(err)
+		return nil, err
 	}
 	filePath := filepath.Join(dirName, filename)
 	f, err := os.Create(filePath)
-	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-		return nil, false
+	if err != nil {
+		errors_util.LogError(err)
+		return nil, err
 	}
-	defer f.Close()
-	return f, true
+	return f, err
 }
 
-func validateFileType(b *bufio.Reader, w http.ResponseWriter) bool {
+func validateFileType(b *bufio.Reader, w http.ResponseWriter) error {
 	n, _ := b.Peek(512)
 	fileType := http.DetectContentType(n)
 	if !utils.IsAllowedFileType(fileType, w) {
-		utils.RenderMessage(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
-		return false
+		err := InvalidFileTypeUploaded(fileType)
+		errors_util.LogError(err)
+		return err
 	}
-	return true
+	return nil
 }
