@@ -13,7 +13,6 @@ env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
