@@ -11,7 +11,7 @@ on:
 
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
-
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
 jobs:
   build:
     runs-on: ubuntu-latest
