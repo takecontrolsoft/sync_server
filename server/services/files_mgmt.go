@@ -29,7 +29,7 @@ type FilesManagementService struct{}
 
 func (s FilesManagementService) Host() bool {
 	fmt.Println("FilesManagementService::Host()")
-	http.HandleFunc("/upload", impl.UploadHandler())
+	http.HandleFunc("/upload", impl.UploadHandler)
 
 	fs := http.FileServer(http.Dir(config.UploadDirectory))
 	http.Handle("/files", http.StripPrefix("/files", fs))

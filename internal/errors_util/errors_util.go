@@ -19,8 +19,6 @@ package errors_util
 import (
 	"log"
 	"os"
-
-	"github.com/go-errors/errors"
 )
 
 func InitLogFile(logFileName string) {
@@ -32,37 +30,21 @@ func InitLogFile(logFileName string) {
 
 func CrashOnError(err error) {
 	if err != nil {
-		log.Printf("ERROR CRASH: [%v]", err)
+		log.Printf("ERROR: [%v]", err)
 		panic(err)
 	}
 }
 
 func LogError(err error) {
 	if err != nil {
-		log.Printf("ERROR CRASH: [%v]", err)
-		println(err)
-	}
-}
-
-func CrashWithError(err *errors.Error) {
-	if err != nil {
-		log.Printf("ERROR CRASH: [%v]", err)
-		panic(err)
-	}
-}
-
-func PrintOnError(err *errors.Error) {
-	if err != nil {
 		log.Printf("ERROR: [%v]", err)
 		println(err)
 	}
 }
 
-func RecoverOnError(err *errors.Error) {
-	if err != nil {
-		log.Printf("ERROR RECOVER: [%v]", err)
-		recover()
-	}
+func LogMessage(message string) {
+	log.Println(message)
+	println(message)
 }
 
 func saveLog(fLog *os.File) {
