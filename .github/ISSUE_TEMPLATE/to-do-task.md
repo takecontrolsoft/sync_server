@@ -7,7 +7,7 @@ assignees: desistefanova
 
 ---
 
-**Add task description here:**
+**Task description:**
 
 **Link the location in GitHub:**
 
