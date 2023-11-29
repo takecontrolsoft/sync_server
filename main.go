@@ -22,9 +22,9 @@ import (
 	e "internal/errors_util"
 	"os"
 
-	"github.com/takecontrolsoft/sync/server/config"
-	"github.com/takecontrolsoft/sync/server/host"
-	"github.com/takecontrolsoft/sync/server/services"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/host"
+	"github.com/takecontrolsoft/sync_server/server/services"
 )
 
 func main() {

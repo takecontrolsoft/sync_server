@@ -1,4 +1,4 @@
-module github.com/takecontrolsoft/sync
+module github.com/takecontrolsoft/sync_server
 
 go 1.21
 

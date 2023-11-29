@@ -23,7 +23,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/takecontrolsoft/sync/server/config"
+	"github.com/takecontrolsoft/sync_server/server/config"
 )
 
 // Service interface that should be implemented by all the services.

@@ -27,10 +27,14 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v -json > TestResults.json
+      run: go test -v ./...
 
-    - name: Upload Go test results
+
+    - name: Build artifacts
+      run: go build -o bin/
+      
+    - name: Upload SyncServer
       uses: actions/upload-artifact@v3
       with:
-        name: Go-results
-        path: TestResults.json
+        name: sync_server
+        path: bin/

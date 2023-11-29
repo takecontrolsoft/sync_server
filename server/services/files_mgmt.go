@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/takecontrolsoft/sync/server/config"
-	host "github.com/takecontrolsoft/sync/server/host"
-	"github.com/takecontrolsoft/sync/server/impl"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	host "github.com/takecontrolsoft/sync_server/server/host"
+	"github.com/takecontrolsoft/sync_server/server/impl"
 )
 
 type FilesManagementService struct{}
