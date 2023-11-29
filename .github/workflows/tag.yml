@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 permissions: write-all
+env:
+  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+
 jobs:
     Release:
       if: contains(github.ref, 'tags/v')
@@ -13,6 +17,22 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
     
       steps:
+        - uses: actions/checkout@v3
+
+        - name: Set up Go
+          uses: actions/setup-go@v4
+          with:
+            go-version: '1.20'
+
+        - name: Build
+          run: go build -v ./...
+
+        - name: Test
+          run: go test -v ./...
+
+        - name: Set environments
+          run: env GOOS=linux GOARCH=amd64 
+        
         - name: Create Release
           id: create_release
           uses: actions/create-release@v1
@@ -23,15 +43,28 @@ jobs:
             release_name: Release ${{ github.ref }}
             draft: true
             prerelease: false
-      
-        - name: Download All Artifacts
-          uses: actions/download-artifact@v2
-         
+
+        - name: Build artifacts
+          run: go build -o bin/
+               
+        - name: Upload SyncServer
+          uses: actions/upload-artifact@v3
+          with:
+            name: sync_server.tar.gz
+            path: ./bin
+        - name: Download release folder
+          uses: actions/download-artifact@v1
+          with:
+            name: sync_server.tar.gz
+            path: release
+
         - name: Upload Linux Asset
           uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: bin/
-            asset_name: sync_server-linux-amd64.tar.gz
+            asset_path: ./release
+            asset_name: sync_server.tar.gz
             asset_content_type: application/zip
         
