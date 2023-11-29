@@ -30,14 +30,14 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    - name: Env artifacts
+    - name: Set environments
       run: env GOOS=linux GOARCH=amd64 
      
     - name: Build artifacts
-      run: go build -o bin/
+      run: go build -o bin/sync_server.tar.gz
       
     - name: Upload SyncServer
       uses: actions/upload-artifact@v3
       with:
-        name: sync_server
+        name: sync_server.tar.gz
         path: bin/
