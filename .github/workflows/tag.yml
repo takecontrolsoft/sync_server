@@ -1,0 +1,35 @@
+name: Sync Server Tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+    release:
+      if: contains(github.ref, 'tags/v')
+      runs-on: ubuntu-latest
+      outputs: 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+    
+      steps:
+        - name: Create Release
+          id: create_release
+          uses: actions/create-release@v1
+          with:
+            tag_name: Tag ${{ github.ref }}
+            release_name: Release ${{ github.ref }}
+            draft: true
+            prerelease: true
+      
+        - name: Download All Artifacts
+          uses: actions/download-artifact@v2
+         
+        - name: Upload Linux Asset
+          uses: actions/upload-release-asset@v1
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: ./sync_server-Linux.zip
+            asset_name: sync_server-Linux.zip
+            asset_content_type: application/zip
+        
