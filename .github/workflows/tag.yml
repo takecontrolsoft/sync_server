@@ -3,7 +3,7 @@ name: Sync Server Tag
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
     release:
@@ -18,9 +18,8 @@ jobs:
           uses: actions/create-release@v1
           with:
             tag_name: Tag ${{ github.ref }}
-            release_name: Release ${{ github.ref }}
             draft: true
-            prerelease: true
+            prerelease: false
       
         - name: Download All Artifacts
           uses: actions/download-artifact@v2
