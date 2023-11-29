@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 concurrency:
   group: ${{ github.head_ref || (github.workflow && github.run_id) }}
   cancel-in-progress: true
@@ -29,11 +30,14 @@ jobs:
     - name: Test
       run: go test -v ./...
 
+    - name: Set environments
+      run: env GOOS=linux GOARCH=amd64 
+     
     - name: Build artifacts
-      run: go build -o bin/
+      run: go build -o bin/sync_server-linux-amd64.tar.gz
       
     - name: Upload SyncServer
       uses: actions/upload-artifact@v3
       with:
-        name: sync_server
+        name: sync_server-linux-amd64.tar.gz
         path: bin/
