@@ -27,8 +27,8 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/takecontrolsoft/sync/server/config"
-	"github.com/takecontrolsoft/sync/server/utils"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
 func init() {

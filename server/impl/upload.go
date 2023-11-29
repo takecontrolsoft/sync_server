@@ -27,8 +27,8 @@ import (
 	"path/filepath"
 
 	"github.com/flytam/filenamify"
-	"github.com/takecontrolsoft/sync/server/config"
-	"github.com/takecontrolsoft/sync/server/utils"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
 // Upload file handler for uploading large streamed files.

@@ -23,8 +23,8 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/takecontrolsoft/sync/server/config"
-	"github.com/takecontrolsoft/sync/server/host"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/host"
 )
 
 func main() {
