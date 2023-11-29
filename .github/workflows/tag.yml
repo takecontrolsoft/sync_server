@@ -32,6 +32,6 @@ jobs:
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
             asset_path: bin/
-            asset_name: sync_server
+            asset_name: sync_server-linux-amd64.tar.gz
             asset_content_type: application/zip
         
