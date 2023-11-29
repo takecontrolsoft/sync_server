@@ -31,7 +31,7 @@ jobs:
       run: go test -v ./...
 
     - name: Build artifacts
-      run: env GOOS=linux GOARCH=amd64 go build main.go -o bin\ 
+      run: GOOS=linux GOARCH=amd64 go build -o bin/ main.go
       
     - name: Upload SyncServer
       uses: actions/upload-artifact@v3
