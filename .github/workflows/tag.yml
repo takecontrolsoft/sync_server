@@ -1,4 +1,4 @@
-name: Sync Server Tag
+name: Release Draft Sync Server
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - 'v*'
 permissions: write-all
 jobs:
-    release:
+    Release:
       if: contains(github.ref, 'tags/v')
       runs-on: ubuntu-latest
       outputs: 
