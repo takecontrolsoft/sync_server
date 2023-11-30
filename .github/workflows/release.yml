@@ -1,0 +1,73 @@
+name: Release Draft Sync Server
+# This workflow is triggered when a new tag is published
+# `git tag v0.0.1alpha`
+# `git push --tags`
+# If the tag already exists, use this commanf to delete it `git tag -d v0.0.1alpha`
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions: write-all
+env:
+  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+
+jobs:
+    Release:
+      if: contains(github.ref, 'tags/v')
+      runs-on: ubuntu-latest
+      outputs: 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+    
+      steps:
+        - uses: actions/checkout@v3
+
+        - name: Set up Go
+          uses: actions/setup-go@v4
+          with:
+            go-version: '1.20'
+
+        - name: Build
+          run: go build -v ./...
+
+        - name: Test
+          run: go test -v ./...
+
+        - name: Set environments
+          run: env GOOS=linux GOARCH=amd64 
+        
+        - name: Create Release
+          id: create_release
+          uses: actions/create-release@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          with:
+            tag_name: Tag ${{ github.ref }}
+            release_name: Release ${{ github.ref }}
+            draft: true
+            prerelease: false
+
+        - name: Build Cross-Platform
+          uses: crazy-max/ghaction-xgo@v3
+          with:
+            xgo_version: latest
+            go_version: 1.21
+            dest: build
+            prefix: sync_server-${{ github.ref_name }}
+            targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
+            v: true
+            x: false
+            race: false
+            ldflags: -s -w
+            buildmode: default
+            trimpath: true      
+               
+        - name: Upload Linux Asset
+          uses: glentiki/xbin-release-action@v1.0.0
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            assets_path: ./build
+        
