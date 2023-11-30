@@ -39,5 +39,6 @@ jobs:
     - name: Upload SyncServer
       uses: actions/upload-artifact@v3
       with:
-        name: sync_server.tar.gz
+        name: sync_server-linux-amd64.tar.gz
         path: bin/sync_server
+
