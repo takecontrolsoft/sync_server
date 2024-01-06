@@ -4,5 +4,5 @@ group "default" {
 
 target "linux" {
   dockerfile = "Dockerfile.linux"
-  tags = ["docker.io/username/webapp"]
+  tags = ["docker.io/takecontrolorg/sync_server_linux"]
 }
