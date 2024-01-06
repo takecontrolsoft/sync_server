@@ -34,7 +34,7 @@ jobs:
 
   build-artifacts:
     name: Build and upload artifacts
-    needs: server-tests
+    needs: build_and_tests
     uses: ./.github/workflows/artifacts.yml
     secrets: inherit
     with:
@@ -45,7 +45,7 @@ jobs:
   build-docker:
     name: Build docker
     needs: 
-      - server-tests
+      - build_and_tests
       - build-artifacts
     secrets: inherit
     uses: ./.github/workflows/docker.yml
