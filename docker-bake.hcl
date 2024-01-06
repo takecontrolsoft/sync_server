@@ -3,7 +3,7 @@ variable "TAG" {
 }
   
 group "default" {
-  targets = ["sync_server"]
+  targets = ["sync_server_linux", "sync_server_macos", "sync_server_windows"]
 }
 
 target "sync_server" {
