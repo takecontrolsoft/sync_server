@@ -1,0 +1,2 @@
+FROM windows:latest
+EXPOSE 3000
