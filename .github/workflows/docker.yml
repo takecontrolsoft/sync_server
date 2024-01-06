@@ -87,8 +87,7 @@ jobs:
         name: Export digest
         run: |
           mkdir -p /tmp/digests
-          echo ${{ steps.bake.outputs.metadata}}
-          digest="${{ fromJSON(steps.bake.outputs.metadata).image['containerimage.digest'] }}"
+          digest="${{ fromJSON(steps.bake.outputs.metadata).sync_server['containerimage.digest'] }}"
           touch "/tmp/digests/${digest#sha256:}"
       -
         name: Upload digest
