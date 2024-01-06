@@ -22,7 +22,7 @@ jobs:
       - name: Create architectures
         id: arch
         run: |
-          echo "architectures=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server_${{ inputs.os }}".platforms')" >>${GITHUB_OUTPUT}
+          echo "architectures=$(docker buildx bake sync_server_${{ inputs.os }} --print | jq -cr '.target."sync_server_${{ inputs.os }}".architectures')" >>${GITHUB_OUTPUT}
       - name: Show architectures
         run: |
           echo ${{ steps.arch.outputs.architectures }}
