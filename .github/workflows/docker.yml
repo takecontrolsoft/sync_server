@@ -26,22 +26,6 @@ jobs:
       - name: Show architectures
         run: |
           echo ${{ steps.platforms.outputs.architectures }}
-
-  build:
-    runs-on: ${{ inputs.os != 'linux' || 'ubuntu' }}-latest
-    needs: prepare-docker
-    strategy:
-      fail-fast: false
-      matrix:
-        architecture: ${{ fromJson(needs.prepare-docker.outputs.matrix_arch_list) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: sync_server-${{ inputs.os }}-${{ matrix.architecture }}
-          path: bin/
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -64,6 +48,27 @@ jobs:
           path: /tmp/bake-meta-${{ inputs.os }}.json
           if-no-files-found: error
           retention-days: 1
+
+  build:
+    runs-on: ${{ inputs.os != 'linux' || 'ubuntu' }}-latest
+    needs: prepare-docker
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: ${{ fromJson(needs.prepare-docker.outputs.matrix_arch_list) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sync_server-${{ inputs.os }}-${{ matrix.architecture }}
+          path: bin/
+      - name: Download meta bake definition
+        uses: actions/download-artifact@v4
+        with:
+          name: bake-meta-${{ inputs.os }}
+          path: /tmp
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
