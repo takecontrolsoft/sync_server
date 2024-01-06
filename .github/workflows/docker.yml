@@ -85,7 +85,7 @@ jobs:
           files: |
             ./docker-bake.hcl
             /tmp/bake-meta.json
-          targets: ""
+          targets:
           set: |
             *.tags=
             *.platform=${{ matrix.platform }}
