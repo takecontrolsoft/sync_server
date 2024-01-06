@@ -45,5 +45,5 @@ jobs:
       - name: Upload SyncServer artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: sync_server-${{ matrix.os }}-${{ matrix.architecture }}.tar.gz
-          path: build/sync_server-${{ matrix.os }}-${{ matrix.architecture }}.tar.gz
+          name: sync_server-${{ matrix.os }}-${{ matrix.architecture }}
+          path: build
