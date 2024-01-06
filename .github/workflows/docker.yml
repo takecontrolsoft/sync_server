@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  REGISTRY_IMAGE: takecontrol/sync_server
+  REGISTRY_IMAGE: takecontrolorg/sync_server
 
 jobs:
   prepare:
