@@ -22,7 +22,7 @@ jobs:
         name: Create matrix
         id: platforms
         run: |
-          echo "matrix=$(docker buildx bake -f docker-image-all.dev.hcl --print | jq -cr '.target."image-all".platforms')" >>${GITHUB_OUTPUT}
+          echo "matrix=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server".platforms')" >>${GITHUB_OUTPUT}
       -
         name: Show matrix
         run: |
