@@ -47,5 +47,6 @@ jobs:
   build-docker:
     name: Build docker
     needs: SyncServer
+    secrets: inherit
     uses: ./.github/workflows/docker.yml
 
