@@ -15,7 +15,7 @@ jobs:
   prepare-docker:
     runs-on: ubuntu-latest
     outputs:
-      architectures:
+      architectures: ${{ steps.architectures.outputs.architectures }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
