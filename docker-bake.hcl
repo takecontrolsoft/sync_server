@@ -9,5 +9,5 @@ group "default" {
 target "sync_server" {
   dockerfile = "Dockerfile"
   tags = ["docker.io/takecontrolorg/sync_server:${TAG}"]
-  platforms = ["linux/amd64", "linux/arm64"]
+  platforms = ["linux/amd64", "linux/arm64", "darwin/amd64", "darwin/arm64", "windows/amd64", "windows/arm64"]
 }

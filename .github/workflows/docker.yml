@@ -46,7 +46,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
-          tags: type=sha
+          tags: |
+              # branch event
+              type=ref,event=branch
+              # tag event
+              type=ref,event=tag
+              # pull request event
+              type=ref,event=pr
       -
         name: Rename meta bake definition file
         run: |
