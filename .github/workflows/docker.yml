@@ -15,17 +15,17 @@ jobs:
   prepare-docker:
     runs-on: ubuntu-latest
     outputs:
-      architectures: ${{ steps.arch.outputs.architectures }}
+      matrix_arch_list: ${{ steps.platforms.outputs.architectures }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create architectures
-        id: arch
+        id: platforms
         run: |
-          echo "architectures=$(docker buildx bake sync_server_${{ inputs.os }} --print | jq -cr '.target."sync_server_${{ inputs.os }}".architectures')" >>${GITHUB_OUTPUT}
+          echo "architectures=$(docker buildx bake sync_server_${{ inputs.os }} --print | jq -cr '.target."sync_server_${{ inputs.os }}".platforms')" >>${GITHUB_OUTPUT}
       - name: Show architectures
         run: |
-          echo ${{ steps.arch.outputs.architectures }}
+          echo ${{ steps.platforms.outputs.architectures }}
 
   build:
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture: ${{ fromJson(needs.prepare-docker.outputs.architectures) }}
+        architecture: ${{ fromJson(needs.prepare-docker.outputs.matrix_arch_list) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,7 +80,7 @@ jobs:
           files: |
             ./docker-bake.hcl
             /tmp/bake-meta.json
-          targets: "sync_server_${{ inputs.os }}"
+          targets: "sync_server"
           set: |
             *.tags=
             *.platform=${{ inputs.os }}/${{ matrix.architecture }}
