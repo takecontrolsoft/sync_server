@@ -88,7 +88,7 @@ jobs:
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
-          digest="${{ fromJSON(steps.bake.outputs.metadata).sync_server['containerimage.digest'] }}"
+          digest="${{ fromJSON(steps.bake.outputs.metadata)[format('sync_server_{0}', inputs.os) ]['containerimage.digest'] }}"
           touch "/tmp/digests/${digest#sha256:}"
       - name: Upload digest
         uses: actions/upload-artifact@v4
