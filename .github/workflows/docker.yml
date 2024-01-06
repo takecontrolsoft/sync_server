@@ -15,17 +15,17 @@ jobs:
   prepare-docker:
     runs-on: ubuntu-latest
     outputs:
-      architectures: ${{ steps.architectures.outputs.architectures }}
+      architectures: ${{ steps.arch.outputs.architectures }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create architectures
-        id: architectures
+        id: arch
         run: |
-          echo "architectures=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server_${{ inputs.os }}".architectures')" >>${GITHUB_OUTPUT}
+          echo "architectures=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server_${{ inputs.os }}".platforms')" >>${GITHUB_OUTPUT}
       - name: Show architectures
         run: |
-          echo ${{ steps.architectures.outputs.architectures }}
+          echo ${{ steps.arch.outputs.architectures }}
 
   build:
     runs-on: ubuntu-latest
