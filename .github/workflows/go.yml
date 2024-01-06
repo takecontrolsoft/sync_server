@@ -13,6 +13,8 @@ concurrency:
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+  REGISTRY_IMAGE: takecontrolorg/sync_server
+
 jobs:
   SyncServer:
     runs-on: ubuntu-latest
@@ -41,4 +43,9 @@ jobs:
       with:
         name: sync_server-linux-amd64.tar.gz
         path: bin/sync_server
+
+  build-docker:
+    name: Build docker
+    needs: SyncServer
+    uses: ./.github/workflows/docker.yml
 

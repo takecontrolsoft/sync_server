@@ -1,16 +1,13 @@
-name: docker
+name: Build docker
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_call
 
 env:
   REGISTRY_IMAGE: takecontrolorg/sync_server
 
 jobs:
-  prepare:
+  prepare-docker:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.platforms.outputs.matrix }}
@@ -30,12 +27,11 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs:
-      - prepare
+    needs: prepare-docker
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        platform: ${{ fromJson(needs.prepare-docker.outputs.matrix) }}
     steps:
       -
         name: Checkout
@@ -105,7 +101,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  merge:
+  merge-tags:
     runs-on: ubuntu-latest
     needs:
       - build
