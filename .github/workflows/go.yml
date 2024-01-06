@@ -33,7 +33,7 @@ jobs:
       run: go test -v ./... 
 
   build-artifacts:
-    name: Build and upload artifacts
+    name: Create artifacts
     needs: build_and_tests
     uses: ./.github/workflows/artifacts.yml
     secrets: inherit
@@ -43,7 +43,7 @@ jobs:
       go_version: '1.21'
 
   build-docker:
-    name: Build docker
+    name: Create docker images
     needs: 
       - build_and_tests
       - build-artifacts

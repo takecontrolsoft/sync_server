@@ -22,7 +22,7 @@ jobs:
       - name: Create architectures
         id: architectures
         run: |
-          echo "architectures=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server.${{ inputs.os }}".platforms')" >>${GITHUB_OUTPUT}
+          echo "architectures=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server_${{ inputs.os }}".architectures')" >>${GITHUB_OUTPUT}
       - name: Show architectures
         run: |
           echo ${{ steps.architectures.outputs.architectures }}
@@ -80,7 +80,7 @@ jobs:
           files: |
             ./docker-bake.hcl
             /tmp/bake-meta.json
-          targets: "sync_server.${{ inputs.os }}"
+          targets: "sync_server_${{ inputs.os }}"
           set: |
             *.tags=
             *.platform=${{ inputs.os }}/${{ matrix.architecture }}
