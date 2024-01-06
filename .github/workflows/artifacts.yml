@@ -22,8 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:${{ fromJSON(inputs.os) }}
-        architecture:${{ fromJSON(inputs.architectures) }}
+        os: ${{ inputs.os }}
+        architecture: ${{ fromJSON(inputs.architectures) }}
     steps:
       - uses: actions/checkout@v3
 
