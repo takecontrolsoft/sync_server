@@ -1,8 +1,12 @@
 # syntax=docker/dockerfile:1
 
-FROM node:18-alpine
-WORKDIR /app
-COPY . .
-RUN yarn install --production
-CMD ["node", "src/index.js"]
+FROM ubuntu:latest
+WORKDIR /sync_server
+COPY /bin/ /sync_server/
+
+RUN cd sync_server
+RUN chmod +x sync_server
+RUN mkdir photos       
+
+CMD ["sync_server", "-p 3000 -d /photos"]
 EXPOSE 3000
