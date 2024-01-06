@@ -48,5 +48,7 @@ jobs:
       - build_and_tests
       - build-artifacts
     secrets: inherit
+    with:
+      os: linux
     uses: ./.github/workflows/docker.yml
 

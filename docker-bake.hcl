@@ -8,7 +8,11 @@ group "default" {
 
 target "sync_server" {
   tags = ["docker.io/takecontrolorg/sync_server:${TAG}"]
-  dockerfile = "Dockerfile"
-  platforms = ["linux/amd64", "linux/arm64"]
+}
+
+target "sync_server.linux" {
+  inherits = ["sync_server"]
+  dockerfile = "Dockerfile.linux"
+  architectures = ["amd64", "arm64"]
 }
 

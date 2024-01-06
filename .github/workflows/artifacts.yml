@@ -33,7 +33,7 @@ jobs:
           xgo_version: latest
           go_version: ${{ inputs.go_version }}
           dest: build
-          prefix: sync_server-
+          prefix: sync_server
           targets: '${{ matrix.os }}/${{ matrix.architecture }}'
           v: true
           x: false

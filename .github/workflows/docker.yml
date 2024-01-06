@@ -1,7 +1,12 @@
 name: Build docker
 
 on:
-  workflow_call
+  workflow_call:
+    inputs:
+      os:
+        description: Operation system to build artifact for.
+        required: true
+        type: string 
 
 env:
   REGISTRY_IMAGE: takecontrolorg/sync_server
@@ -10,17 +15,17 @@ jobs:
   prepare-docker:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.platforms.outputs.matrix }}
+      architectures:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Create matrix
-        id: platforms
+      - name: Create architectures
+        id: architectures
         run: |
-          echo "matrix=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server".platforms')" >>${GITHUB_OUTPUT}
-      - name: Show matrix
+          echo "architectures=$(docker buildx bake sync_server --print | jq -cr '.target."sync_server.${{ inputs.os }}".platforms')" >>${GITHUB_OUTPUT}
+      - name: Show architectures
         run: |
-          echo ${{ steps.platforms.outputs.matrix }}
+          echo ${{ steps.architectures.outputs.architectures }}
 
   build:
     runs-on: ubuntu-latest
@@ -28,14 +33,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJson(needs.prepare-docker.outputs.matrix) }}
+        architecture: ${{ fromJson(needs.prepare-docker.outputs.architectures) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: sync_server-${{ matrix.platform }}.tar.gz
+          name: sync_server-${{ inputs.os }}-${{ matrix.architecture }}.tar.gz
           path: bin/
       - name: Docker meta
         id: meta
@@ -75,10 +80,10 @@ jobs:
           files: |
             ./docker-bake.hcl
             /tmp/bake-meta.json
-          targets: "sync_server"
+          targets: "sync_server.${{ inputs.os }}"
           set: |
             *.tags=
-            *.platform=${{ matrix.platform }}
+            *.platform=${{ inputs.os }}/${{ matrix.architecture }}
             *.output=type=image,"name=${{ env.REGISTRY_IMAGE }}",push-by-digest=true,name-canonical=true,push=true
       - name: Export digest
         run: |
