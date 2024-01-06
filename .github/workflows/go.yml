@@ -14,6 +14,7 @@ env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
   REGISTRY_IMAGE: takecontrolorg/sync_server
+  GO_VERSION: 1.21
 
 jobs:
   SyncServer:
@@ -24,7 +25,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.20'
+        go-version:  '${{ env.GO_VERSION }}'
 
     - name: Build
       run: go build -v ./...
@@ -35,14 +36,29 @@ jobs:
     - name: Set environments
       run: env GOOS=linux GOARCH=amd64 
      
+    - name: Build Cross-Platform
+      uses: crazy-max/ghaction-xgo@v3
+      with:
+        xgo_version: latest
+        go_version:  ${{ env.GO_VERSION }}
+        dest: build
+        prefix: sync_server
+        targets: linux/amd64,linux/arm64
+        v: true
+        x: false
+        race: false
+        ldflags: -s -w
+        buildmode: default
+        trimpath: true
+  
     - name: Build artifacts
       run: go build -o bin/
       
     - name: Upload SyncServer
       uses: actions/upload-artifact@v3
       with:
-        name: sync_server-linux-amd64.tar.gz
-        path: bin/sync_server
+        name: sync_server*
+        path: bin/
 
   build-docker:
     name: Build docker
