@@ -1,0 +1,60 @@
+name: Build artifacts
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: Operation system to build artifact for.
+        required: true
+        type: string 
+      architectures:
+        description: Architectures to build artifact for.
+        required: true
+        type: string   
+      go_version:
+          description: Go version to be used for the build.
+          required: true
+          type: string       
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:${{ fromJSON(inputs.os) }}
+        architecture:${{ fromJSON(inputs.architectures) }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '${{ inputs.go_version }}'
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Set environments
+        run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.architecture }}         
+   
+      - name: Build Cross-Platform
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: ${{ inputs.go_version }}
+          dest: build
+          prefix: sync_server-
+          targets: '${{ matrix.os }}/${{ matrix.architecture }}'
+          v: true
+          x: false
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true 
+
+      - name: Upload SyncServer artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sync_server-${{ matrix.os }}-${{ matrix.architecture }}.tar.gz
+          path: build/

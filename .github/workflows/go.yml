@@ -13,11 +13,10 @@ concurrency:
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
-  REGISTRY_IMAGE: takecontrolorg/sync_server
-  GO_VERSION: 1.21
-
+  GO_VERSION: '1.21'
+  
 jobs:
-  SyncServer:
+  server-tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -25,44 +24,29 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version:  '${{ env.GO_VERSION }}'
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Build
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v ./... 
 
-    - name: Set environments
-      run: env GOOS=linux GOARCH=amd64 
-     
-    - name: Build Cross-Platform
-      uses: crazy-max/ghaction-xgo@v3
-      with:
-        xgo_version: latest
-        go_version:  ${{ env.GO_VERSION }}
-        dest: build
-        prefix: sync_server
-        targets: linux/amd64,linux/arm64
-        v: true
-        x: false
-        race: false
-        ldflags: -s -w
-        buildmode: default
-        trimpath: true
-  
-    - name: Build artifacts
-      run: go build -o bin/
-      
-    - name: Upload SyncServer
-      uses: actions/upload-artifact@v3
-      with:
-        name: sync_server*
-        path: bin/
+  build-artifacts:
+    name: Build and upload artifacts
+    needs: server-tests
+    uses: ./.github/workflows/artifacts.yml
+    secrets: inherit
+    with:
+      os: '["linux"]'
+      architectures: '["amd64", "arm64"]'
+      go_version: '1.21'
 
   build-docker:
     name: Build docker
-    needs: SyncServer
+    needs: 
+      - server-tests
+      - build-artifacts
     secrets: inherit
     uses: ./.github/workflows/docker.yml
 
