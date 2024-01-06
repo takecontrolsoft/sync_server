@@ -85,6 +85,7 @@ jobs:
           files: |
             ./docker-bake.hcl
             /tmp/bake-meta.json
+          targets: "sync_server"
           set: |
             *.tags=
             *.platform=${{ matrix.platform }}
