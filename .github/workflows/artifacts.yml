@@ -26,17 +26,6 @@ jobs:
         architecture: ${{ fromJSON(inputs.architectures) }}
     steps:
       - uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '${{ inputs.go_version }}'
-
-      - name: Build
-        run: go build -v ./...
-
-      - name: Set environments
-        run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.architecture }}         
    
       - name: Build Cross-Platform
         uses: crazy-max/ghaction-xgo@v3
