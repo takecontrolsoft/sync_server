@@ -16,7 +16,7 @@ env:
   GO_VERSION: '1.21'
 
 jobs:
-  server-tests:
+  build_and_tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
