@@ -16,3 +16,15 @@ target "sync_server_linux" {
   platforms = ["amd64", "arm64"]
 }
 
+target "sync_server_macos" {
+  inherits = ["sync_server"]
+  dockerfile = "Dockerfile.macos"
+  platforms = ["amd64", "arm64"]
+}
+
+target "sync_server_windows" {
+  inherits = ["sync_server"]
+  dockerfile = "Dockerfile.windows"
+  platforms = ["amd64", "arm64"]
+}
+

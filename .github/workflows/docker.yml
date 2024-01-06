@@ -28,7 +28,7 @@ jobs:
           echo ${{ steps.platforms.outputs.architectures }}
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os != 'linux' || 'ubuntu' }}-latest
     needs: prepare-docker
     strategy:
       fail-fast: false
