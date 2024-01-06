@@ -3,21 +3,12 @@ variable "TAG" {
 }
   
 group "default" {
-  targets = ["sync_server.linux", "sync_server.windows"]
+  targets = ["sync_server"]
 }
 
 target "sync_server" {
-   tags = ["docker.io/takecontrolorg/sync_server:${TAG}"]
-}
-
-target "sync_server.linux" {
-  inherits = ["sync_server"]
-  dockerfile = "Dockerfile.linux"
+  tags = ["docker.io/takecontrolorg/sync_server:${TAG}"]
+  dockerfile = "Dockerfile"
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-target "sync_server.windows" {
-  inherits = ["sync_server"]
-  dockerfile = "Dockerfile.windows"
-  platforms = ["windows/amd64", "windows/arm64"]
-}
