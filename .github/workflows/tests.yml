@@ -14,7 +14,7 @@ on:
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
-  
+
 jobs:
   build_and_tests:
     runs-on: ubuntu-latest
@@ -38,5 +38,5 @@ jobs:
     - name: Upload SyncServer
       uses: actions/upload-artifact@v3
       with:
-        name: sync_server-linux-amd64.tar.gz
+        name: sync_server-linux-amd64
         path: bin/sync_server
