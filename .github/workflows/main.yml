@@ -17,24 +17,23 @@ jobs:
     secrets: inherit
     with:
       go_version: '1.21'
-      upload: true #Remove if uncomment build-artifacts
     uses: ./.github/workflows/tests.yml
 
-  # build-artifacts:
-  #   name: Artifacts
-  #   needs: build_and_tests
-  #   uses: ./.github/workflows/artifacts.yml
-  #   secrets: inherit
-  #   with:
-  #     os: '["linux"]'
-  #     architectures: '["amd64", "arm64"]'
-  #     go_version: '1.21'
+  build-artifacts:
+    name: Artifacts
+    needs: build_and_tests
+    uses: ./.github/workflows/artifacts.yml
+    secrets: inherit
+    with:
+      os: '["linux"]'
+      architectures: '["amd64"]'
+      go_version: '1.21'
 
   build-docker-linux:
     name: Docker image
     needs: 
       - build_and_tests
-      # - build-artifacts
+      - build-artifacts
     secrets: inherit
     with:
       os: linux

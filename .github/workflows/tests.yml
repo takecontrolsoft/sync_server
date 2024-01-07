@@ -6,11 +6,7 @@ on:
       go_version:
         description: Go version to be used for the build.
         required: true
-        type: string
-      upload:
-          description: If true builds and uploads artifact.
-          required: false
-          type: boolean        
+        type: string   
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
@@ -31,12 +27,3 @@ jobs:
 
     - name: Test
       run: go test -v ./... 
-
-    - name: Build artifacts
-      run: go build -o bin/
-
-    - name: Upload SyncServer
-      uses: actions/upload-artifact@v3
-      with:
-        name: sync_server-linux-amd64
-        path: bin/sync_server
