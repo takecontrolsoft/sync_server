@@ -50,7 +50,7 @@ jobs:
           retention-days: 1
 
   build:
-    runs-on: ${{ inputs.os != 'linux' || 'ubuntu' }}-latest
+    runs-on: ${{ inputs.os != 'linux' && inputs.os || 'ubuntu' }}-latest
     needs: prepare-docker
     strategy:
       fail-fast: false
