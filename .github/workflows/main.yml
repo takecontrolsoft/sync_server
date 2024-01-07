@@ -14,12 +14,12 @@ jobs:
     secrets: inherit
     with:
       go_version: ${{ vars.GO_VERSION }}
-    uses: ./.github/workflows/tests.yml
+    uses: ./.github/workflows/w_tests.yml
 
   build-artifacts:
     name: Artifacts
     needs: build_and_tests
-    uses: ./.github/workflows/artifacts.yml
+    uses: ./.github/workflows/w_artifacts.yml
     secrets: inherit
     with:
       os: '["linux"]'
@@ -28,12 +28,10 @@ jobs:
 
   build-docker-images:
     name: Docker image
-    needs: 
-      - build_and_tests
-      - build-artifacts
+    needs: build-artifacts
     secrets: inherit
     with:
       os: '["linux"]'
       architectures: '["amd64", "arm64"]' 
-    uses: ./.github/workflows/docker.yml
+    uses: ./.github/workflows/w_docker.yml
 

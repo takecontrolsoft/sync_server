@@ -1,4 +1,4 @@
-name: Build artifacts
+name: Workflow Artifacts
 
 on:
   workflow_call:

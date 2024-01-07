@@ -1,4 +1,4 @@
-name: Build docker
+name: Workflow Docker Image
 
 on:
   workflow_call:
@@ -139,4 +139,4 @@ jobs:
             token: ${{ secrets.GITHUB_TOKEN }}
             name: |
                 bake-meta
-                digests-*
+                artifact
