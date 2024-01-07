@@ -3,8 +3,6 @@ name: Sync Server
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
