@@ -1,4 +1,4 @@
-name: Release Draft Sync Server
+name: Pre-release Sync Server
 # This workflow is triggered when a new tag is published
 # `git tag v0.0.1alpha`
 # `git push --tags`
@@ -23,22 +23,13 @@ jobs:
     
       steps:
         - uses: actions/checkout@v3
-     
-        - name: Build Cross-Platform
-          uses: crazy-max/ghaction-xgo@v3
-          with:
-            xgo_version: latest
-            go_version: 1.21
-            dest: build
-            prefix: sync_server${{ github.ref_name }}
-            targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
-            v: true
-            x: false
-            race: false
-            ldflags: -s -w
-            buildmode: default
-            trimpath: true  
-
+        - name: Get version number
+          id: version
+          run: |
+            echo "number=$(echo '${{ github.ref }}' | cut -d '/' -f 3)" >>${GITHUB_OUTPUT}
+        - name: Show version number
+          run: |
+            echo ${{ steps.version.outputs.number }}
         - name: Create Release
           id: create_release
           uses: actions/create-release@v1
@@ -47,32 +38,29 @@ jobs:
           with:
             tag_name: ${{ github.ref }}
             release_name: ${{ github.ref }}
-            draft: true
-            prerelease: false
- 
-               
-        - name: Upload Linux Asset
-          uses: glentiki/xbin-release-action@v1.0.0
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            assets_path: ./build
-        - name: Get version number
-          id: version
-          run: |
-            echo "number=$(${{ github.ref }} | cut -d "/")" >>${GITHUB_OUTPUT}
-        - name: Show  version number
-          run: |
-            echo ${{  github.ref}}
-            echo ${{ steps.version.outputs.number }}
+            draft: false
+            prerelease: true   
+        
+    build-artifacts:
+      name: Artifacts
+      needs: release
+      uses: ./.github/workflows/artifacts.yml
+      secrets: inherit
+      with:
+        os: '["linux", "windows", "macos"]'
+        architectures: '["amd64","arm64"]'
+        go_version: '1.21'
+        release: -${{ needs.release.outputs.v_num }}
+        release_url: ${{ needs.release.outputs.upload_url }}
 
     build-docker-linux:
       name: Docker image
-      needs: release
+      needs: 
+        - release
+        - build-artifacts
       secrets: inherit
       with:
         os: linux
-        release:  ${{ needs.release.outputs.v_numnumber }}
+        release: -${{ needs.release.outputs.v_num }}
       uses: ./.github/workflows/docker.yml
             
