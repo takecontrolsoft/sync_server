@@ -26,14 +26,14 @@ jobs:
       architectures: '["amd64", "arm64"]'
       go_version: ${{ vars.GO_VERSION }}
 
-  build-docker-linux:
+  build-docker-images:
     name: Docker image
     needs: 
       - build_and_tests
       - build-artifacts
     secrets: inherit
     with:
-      os: linux
+      os: '["linux"]'
       architectures: '["amd64", "arm64"]' 
     uses: ./.github/workflows/docker.yml
 
