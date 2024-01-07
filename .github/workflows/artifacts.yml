@@ -34,7 +34,7 @@ jobs:
           go_version: ${{ inputs.go_version }}
           dest: build
           prefix: sync_server
-          targets: '${{ matrix.os }}/${{ matrix.architecture }}'
+          targets: ${{ matrix.os != 'macos' && matrix.os || 'darwin'}}/${{ matrix.architecture }}
           v: true
           x: false
           race: false
