@@ -1,0 +1,49 @@
+name: Build artifacts
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: Operation system to build artifact for.
+        required: true
+        type: string 
+      architectures:
+        description: Architectures to build artifact for.
+        required: true
+        type: string   
+      go_version:
+        description: Go version to be used for the build.
+        required: true
+        type: string       
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.os) }}
+        architecture: ${{ fromJSON(inputs.architectures) }}
+    steps:
+      - uses: actions/checkout@v3
+   
+      - name: Build Cross-Platform
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: ${{ inputs.go_version }}
+          dest: build
+          prefix: sync_server
+          targets: ${{ matrix.os != 'macos' && matrix.os || 'darwin'}}/${{ matrix.architecture }}
+          v: true
+          x: false
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true 
+
+      - name: Upload SyncServer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync_server-${{ matrix.os }}-${{ matrix.architecture }}
+          path: build

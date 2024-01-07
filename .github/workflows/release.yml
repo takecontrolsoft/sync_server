@@ -22,21 +22,22 @@ jobs:
     
       steps:
         - uses: actions/checkout@v3
-
-        - name: Set up Go
-          uses: actions/setup-go@v4
+     
+        - name: Build Cross-Platform
+          uses: crazy-max/ghaction-xgo@v3
           with:
-            go-version: '1.20'
+            xgo_version: latest
+            go_version: 1.21
+            dest: build
+            prefix: sync_server${{ github.ref_name }}
+            targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
+            v: true
+            x: false
+            race: false
+            ldflags: -s -w
+            buildmode: default
+            trimpath: true  
 
-        - name: Build
-          run: go build -v ./...
-
-        - name: Test
-          run: go test -v ./...
-
-        - name: Set environments
-          run: env GOOS=linux GOARCH=amd64 
-        
         - name: Create Release
           id: create_release
           uses: actions/create-release@v1
@@ -47,21 +48,7 @@ jobs:
             release_name: ${{ github.ref }}
             draft: true
             prerelease: false
-
-        - name: Build Cross-Platform
-          uses: crazy-max/ghaction-xgo@v3
-          with:
-            xgo_version: latest
-            go_version: 1.21
-            dest: build
-            prefix: sync_server-${{ github.ref_name }}
-            targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
-            v: true
-            x: false
-            race: false
-            ldflags: -s -w
-            buildmode: default
-            trimpath: true      
+ 
                
         - name: Upload Linux Asset
           uses: glentiki/xbin-release-action@v1.0.0
@@ -70,4 +57,14 @@ jobs:
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
             assets_path: ./build
+
+    build-docker-linux:
+      name: Docker image
+      needs: 
+        - Release
+      secrets: inherit
+      with:
+        os: linux
+        release: ${{ github.ref }}
+      uses: ./.github/workflows/docker.yml
         
