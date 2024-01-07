@@ -1,4 +1,4 @@
-name: Pre-release Sync Server
+name: Release
 # This workflow is triggered when a new tag is published
 # `git tag v0.0.1alpha`
 # `git push --tags`

@@ -1,4 +1,4 @@
-name: Sync Server
+name: Main
 
 on:
   push:
