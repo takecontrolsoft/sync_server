@@ -90,18 +90,6 @@ jobs:
             *.tags=
             *.platform=${{ matrix.architecture }}
             *.output=type=image,"name=${{ env.REGISTRY_IMAGE }}",push-by-digest=true,name-canonical=true,push=true
-      # - name: Export digest
-      #   run: |
-      #     mkdir -p /tmp/digests
-      #     digest="${{ fromJSON(steps.bake.outputs.metadata)[format('sync_server_{0}', inputs.os) ]['containerimage.digest'] }}"
-      #     touch "/tmp/digests/${digest#sha256:}"
-      # - name: Upload digest
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: digests-${{ inputs.os }}
-      #     path: /tmp/digests/*
-      #     if-no-files-found: error
-      #     retention-days: 1
 
   merge-tags:
     runs-on: ubuntu-latest
@@ -113,11 +101,6 @@ jobs:
         with:
           name: bake-meta-${{ inputs.os }}
           path: /tmp
-      # - name: Download digests
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: digests-${{ inputs.os }}
-      #     path: /tmp/digests
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -126,10 +109,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Create manifest list and push
-        #working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.target."docker-metadata-action".tags | map(select(startswith("${{ env.REGISTRY_IMAGE }}")) | "-t " + .) | join(" ")' /tmp/bake-meta-${{ inputs.os }}.json) \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+            $(printf '${{ env.REGISTRY_IMAGE }}:%s ' *)
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:$(jq -r '.target."docker-metadata-action".args.DOCKER_META_VERSION' /tmp/bake-meta-${{ inputs.os }}.json)
