@@ -95,7 +95,7 @@ jobs:
         run: |
           mkdir -p /tmp/digests
           digest="${{ fromJSON(steps.bake.outputs.metadata)[format('sync_server_{0}', matrix.os) ]['containerimage.digest'] }}"
-          echo "digest_name=$(echo digest-${digest#sha256:})" >>${GITHUB_OUTPUT}
+          echo "digest_name=$(echo ${digest#sha256:})" >>${GITHUB_OUTPUT}
       - name: Create digit file
         run: |
           echo ${{ steps.digits.outputs.digest_name }}
@@ -104,14 +104,13 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.digits.outputs.digest_name }}
+          name: digest-${{ matrix.os }}-${{ matrix.architecture }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
 
   merge-tags:
     runs-on: ubuntu-latest
-    continue-on-error: true
     needs: build
     steps:
       - name: Download meta bake definition
@@ -124,6 +123,12 @@ jobs:
         with:
           pattern: digest-*
           path: /tmp/digests
+      - name: Unzip digit files
+        working-directory: /tmp/digests
+        run: |  
+            find /tmp/digests/digest-* -type f -exec mv -nv -t '/tmp/digests/' -- {} +
+            cd /tmp/digests/
+            rm -rf digest-*
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -134,8 +139,8 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create $(jq -cr '.target."docker-metadata-action".tags | map(select(startswith("${{ env.REGISTRY_IMAGE }}")) | "-t " + .) | join(" ")' /tmp/bake-meta.json) \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s '  * | cut -d '-' -f 2 )
+            docker buildx imagetools create $(jq -cr '.target."docker-metadata-action".tags | map(select(startswith("${{ env.REGISTRY_IMAGE }}")) | "-t " + .) | join(" ")' /tmp/bake-meta.json) \
+              $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:$(jq -r '.target."docker-metadata-action".args.DOCKER_META_VERSION' /tmp/bake-meta.json)
