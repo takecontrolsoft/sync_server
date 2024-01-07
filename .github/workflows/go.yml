@@ -38,7 +38,7 @@ jobs:
     uses: ./.github/workflows/artifacts.yml
     secrets: inherit
     with:
-      os: '["linux", "macos", "windows"]'
+      os: '["linux"]'
       architectures: '["amd64", "arm64"]'
       go_version: '1.21'
 
@@ -52,23 +52,5 @@ jobs:
       os: linux
     uses: ./.github/workflows/docker.yml
 
-  build-docker-windows:
-    name: Docker image
-    needs: 
-      - build_and_tests
-      - build-artifacts
-    secrets: inherit
-    with:
-      os: windows
-    uses: ./.github/workflows/docker.yml
-      
-  build-docker-macos:
-    name: Docker image
-    needs: 
-      - build_and_tests
-      - build-artifacts
-    secrets: inherit
-    with:
-      os: macos
-    uses: ./.github/workflows/docker.yml
+  
 
