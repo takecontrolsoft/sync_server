@@ -27,7 +27,7 @@ jobs:
         - name: Get version number
           id: version
           run: |
-            echo "tag_ref='${{ github.ref }}' | cut -d '/' -f 3"
+            echo "tag_ref=$(echo '${{ github.ref }}' | cut -d '/' -f 3)"
             echo "number=$tag_ref" >>${GITHUB_OUTPUT}
         - name: Show version number
           run: |
