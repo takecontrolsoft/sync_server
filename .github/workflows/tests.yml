@@ -11,7 +11,10 @@ on:
           description: If true builds and uploads artifact.
           required: false
           type: boolean        
-
+env:
+  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+  
 jobs:
   build_and_tests:
     runs-on: ubuntu-latest

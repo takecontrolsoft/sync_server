@@ -11,8 +11,6 @@ concurrency:
   cancel-in-progress: true
   
 env:
-  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
-  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
   GO_VERSION: '1.21'
 
 jobs:
