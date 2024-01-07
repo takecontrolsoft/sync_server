@@ -49,7 +49,7 @@ jobs:
       with:
         os: '["linux", "windows", "macos"]'
         architectures: '["amd64","arm64"]'
-        go_version: '1.21'
+        go_version: ${{ vars.GO_VERSION }}
         release: -${{ needs.release.outputs.v_num }}
         release_url: ${{ needs.release.outputs.upload_url }}
 

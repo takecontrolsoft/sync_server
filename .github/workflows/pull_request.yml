@@ -1,8 +1,12 @@
-name: Sync Server
+name: Sync Server Test
 
 on:
-  push:
+  pull_request:
     branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.head_ref || (github.workflow && github.run_id) }}
+  cancel-in-progress: true
   
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
@@ -16,6 +20,7 @@ jobs:
       go_version: ${{ vars.GO_VERSION }}
     uses: ./.github/workflows/tests.yml
 
+  #To be removed after tests
   build-artifacts:
     name: Artifacts
     needs: build_and_tests
@@ -35,4 +40,5 @@ jobs:
     with:
       os: linux
     uses: ./.github/workflows/docker.yml
+
 
