@@ -38,7 +38,8 @@ jobs:
       - build-artifacts
     secrets: inherit
     with:
-      os: linux
+      os: '["linux"]'
+      architectures: '["amd64", "arm64"]'     
     uses: ./.github/workflows/docker.yml
 
 

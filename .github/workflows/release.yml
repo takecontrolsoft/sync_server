@@ -61,6 +61,7 @@ jobs:
       secrets: inherit
       with:
         os: linux
+        architectures: '["amd64", "arm64"]' 
         release: -${{ needs.release.outputs.v_num }}
       uses: ./.github/workflows/docker.yml
             

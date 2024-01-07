@@ -4,9 +4,13 @@ on:
   workflow_call:
     inputs:
       os:
-        description: Operation system to build artifact for.
+        description: Operation system to build docker image for.
         required: true
         type: string 
+      architectures:
+        description: Architectures to build docker image for.
+        required: true
+        type: string    
       release:
         description: Number of released version. Not required.
         required: false
@@ -18,18 +22,9 @@ env:
 jobs:
   prepare-docker:
     runs-on: ubuntu-latest
-    outputs:
-      matrix_arch_list: ${{ steps.platforms.outputs.architectures }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Create architectures
-        id: platforms
-        run: |
-          echo "architectures=$(docker buildx bake sync_server_${{ inputs.os }} --print | jq -cr '.target."sync_server_${{ inputs.os }}".platforms')" >>${GITHUB_OUTPUT}
-      - name: Show architectures
-        run: |
-          echo ${{ steps.platforms.outputs.architectures }}
+        uses: actions/checkout@v4      
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -44,12 +39,12 @@ jobs:
               type=ref,event=pr
       - name: Rename meta bake definition file
         run: |
-          mv "${{ steps.meta.outputs.bake-file }}" "/tmp/bake-meta-${{ inputs.os }}.json"
+          mv "${{ steps.meta.outputs.bake-file }}" "/tmp/bake-meta.json"
       - name: Upload meta bake definition
         uses: actions/upload-artifact@v4
         with:
-          name: bake-meta-${{ inputs.os }}
-          path: /tmp/bake-meta-${{ inputs.os }}.json
+          name: bake-meta
+          path: /tmp/bake-meta.json
           if-no-files-found: error
           retention-days: 1
 
@@ -59,7 +54,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture: ${{ fromJson(needs.prepare-docker.outputs.matrix_arch_list) }}
+        os: ${{ fromJson(inputs.os) }}
+        architecture: ${{ fromJson(inputs.architectures) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,7 +67,7 @@ jobs:
       - name: Download meta bake definition
         uses: actions/download-artifact@v4
         with:
-          name: bake-meta-${{ inputs.os }}
+          name: bake-meta
           path: /tmp
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -88,7 +84,7 @@ jobs:
         with:
           files: |
             ./docker-bake.hcl
-            /tmp/bake-meta-${{ inputs.os }}.json
+            /tmp/bake-meta.json
           targets: "sync_server_${{ inputs.os }}"
           set: |
             *.tags=
@@ -103,7 +99,6 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ inputs.os }}-${{ matrix.architecture }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -116,12 +111,12 @@ jobs:
       - name: Download meta bake definition
         uses: actions/download-artifact@v4
         with:
-          name: bake-meta-${{ inputs.os }}
+          name: bake-meta
           path: /tmp
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
-          name: digests-${{ inputs.os }}
+          name: digests-*
           path: /tmp/digests
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -143,5 +138,5 @@ jobs:
         with:
             token: ${{ secrets.GITHUB_TOKEN }}
             name: |
-                bake-meta-*
+                bake-meta
                 digests-*

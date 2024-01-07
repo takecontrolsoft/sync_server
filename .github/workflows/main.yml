@@ -34,5 +34,6 @@ jobs:
     secrets: inherit
     with:
       os: linux
+      architectures: '["amd64", "arm64"]' 
     uses: ./.github/workflows/docker.yml
 
