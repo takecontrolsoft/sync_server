@@ -69,7 +69,7 @@ jobs:
           echo "arch=$(echo '${{ matrix.architecture }}' | cut -d '/' -f 2)" >>${GITHUB_OUTPUT}
       - name: Show architecture
         run: |
-          echo "arch=$(echo '${{ steps.archId.outputs.arch != '' && steps.archId.outputs.arch || inputs.architecture }})" >>${GITHUB_OUTPUT}     
+          echo "arch=$(echo ${{ steps.archId.outputs.arch != '' && steps.archId.outputs.arch || inputs.architecture }})" >>${GITHUB_OUTPUT}     
           echo ${{ steps.archId.outputs.arch }}
       - name: Download artifacts
         uses: actions/download-artifact@v4
