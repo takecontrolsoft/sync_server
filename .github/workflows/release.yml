@@ -63,7 +63,9 @@ jobs:
 
     build-docker-images:
       name: Docker image
-      needs: build-artifacts
+      needs: 
+        - release
+        - build-artifacts
       secrets: inherit
       with:
         os: '["linux"]'
