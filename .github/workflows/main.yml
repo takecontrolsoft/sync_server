@@ -24,7 +24,7 @@ jobs:
     secrets: inherit
     with:
       os: '["linux"]'
-      architectures: '["amd64"]'
+      architectures: '["amd64", "arm64"]'
       go_version: '1.21'
 
   build-docker-linux:
