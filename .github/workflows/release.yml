@@ -23,6 +23,15 @@ jobs:
     
       steps:
         - uses: actions/checkout@v3
+        
+        - name: Get version number
+          id: version
+          run: |
+            tag_ref="'${{ github.ref }}' | cut -d '/' -f 3"
+            echo "number=$tag_ref" >>${GITHUB_OUTPUT}
+        - name: Show version number
+          run: |
+            echo ${{ steps.version.outputs.number }}
      
         - name: Build Cross-Platform
           uses: crazy-max/ghaction-xgo@v3
@@ -58,15 +67,7 @@ jobs:
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
             assets_path: ./build
-        - name: Get version number
-          id: version
-          run: |
-            tag_ref="'${{ github.ref }}' | cut -d '/' -f 3"
-            echo "number=$tag_ref" >>${GITHUB_OUTPUT}
-        - name: Show version number
-          run: |
-            echo ${{  github.ref}}
-            echo ${{ steps.version.outputs.number }}
+        
 
     build-docker-linux:
       name: Docker image
