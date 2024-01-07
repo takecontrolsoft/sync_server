@@ -1,4 +1,4 @@
-name: Release Draft Sync Server
+name: Pre-release Sync Server
 # This workflow is triggered when a new tag is published
 # `git tag v0.0.1alpha`
 # `git push --tags`
@@ -30,7 +30,7 @@ jobs:
             xgo_version: latest
             go_version: 1.21
             dest: build
-            prefix: sync_server${{ github.ref_name }}
+            prefix: sync_server-${{ github.ref_name }}
             targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
             v: true
             x: false
@@ -47,8 +47,8 @@ jobs:
           with:
             tag_name: ${{ github.ref }}
             release_name: ${{ github.ref }}
-            draft: true
-            prerelease: false
+            draft: false
+            prerelease: true
  
                
         - name: Upload Linux Asset
@@ -61,8 +61,9 @@ jobs:
         - name: Get version number
           id: version
           run: |
-            echo "number=$(${{ github.ref }} | cut -d "/")" >>${GITHUB_OUTPUT}
-        - name: Show  version number
+            tag_ref="'${{ github.ref }}' | cut -d '/' -f 3"
+            echo "number=$tag_ref" >>${GITHUB_OUTPUT}
+        - name: Show version number
           run: |
             echo ${{  github.ref}}
             echo ${{ steps.version.outputs.number }}
@@ -73,6 +74,6 @@ jobs:
       secrets: inherit
       with:
         os: linux
-        release:  ${{ needs.release.outputs.v_numnumber }}
+        release:  -${{ needs.release.outputs.v_num }}
       uses: ./.github/workflows/docker.yml
             
