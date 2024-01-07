@@ -1,0 +1,44 @@
+name: Sync Server
+
+on:
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.head_ref || (github.workflow && github.run_id) }}
+  cancel-in-progress: true
+  
+env:
+  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+  GO_VERSION: '1.21'
+
+jobs:
+  build_and_tests:
+    name: Test sync
+    secrets: inherit
+    with:
+      go_version: '1.21'
+      upload: true #Remove if uncomment build-artifacts
+    uses: ./.github/workflows/tests.yml
+
+  # build-artifacts:
+  #   name: Artifacts
+  #   needs: build_and_tests
+  #   uses: ./.github/workflows/artifacts.yml
+  #   secrets: inherit
+  #   with:
+  #     os: '["linux"]'
+  #     architectures: '["amd64", "arm64"]'
+  #     go_version: '1.21'
+
+  build-docker-linux:
+    name: Docker image
+    needs: 
+      - build_and_tests
+      # - build-artifacts
+    secrets: inherit
+    with:
+      os: linux
+    uses: ./.github/workflows/docker.yml
+
