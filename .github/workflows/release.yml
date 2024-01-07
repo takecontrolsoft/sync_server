@@ -23,7 +23,6 @@ jobs:
     
       steps:
         - uses: actions/checkout@v3
-
         - name: Get version number
           id: version
           run: |
@@ -31,22 +30,6 @@ jobs:
         - name: Show version number
           run: |
             echo ${{ steps.version.outputs.number }}
-     
-        - name: Build Cross-Platform
-          uses: crazy-max/ghaction-xgo@v3
-          with:
-            xgo_version: latest
-            go_version: 1.21
-            dest: build
-            prefix: sync_server-${{ steps.version.outputs.number }}
-            targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
-            v: true
-            x: false
-            race: false
-            ldflags: -s -w
-            buildmode: default
-            trimpath: true  
-
         - name: Create Release
           id: create_release
           uses: actions/create-release@v1
@@ -56,17 +39,19 @@ jobs:
             tag_name: ${{ github.ref }}
             release_name: ${{ github.ref }}
             draft: false
-            prerelease: true
- 
-               
-        - name: Upload Linux Asset
-          uses: glentiki/xbin-release-action@v1.0.0
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            assets_path: ./build
+            prerelease: true   
         
+    build-artifacts:
+      name: Artifacts
+      needs: release
+      uses: ./.github/workflows/artifacts.yml
+      secrets: inherit
+      with:
+        os: '["linux", "windows", "macos"]'
+        architectures: '["amd64","arm64"]'
+        go_version: '1.21'
+        release: -${{ needs.release.outputs.v_num }}
+        release_url: ${{ needs.release.outputs.upload_url }}
 
     build-docker-linux:
       name: Docker image
@@ -74,6 +59,6 @@ jobs:
       secrets: inherit
       with:
         os: linux
-        release:  -${{ needs.release.outputs.v_num }}
+        release: -${{ needs.release.outputs.v_num }}
       uses: ./.github/workflows/docker.yml
             

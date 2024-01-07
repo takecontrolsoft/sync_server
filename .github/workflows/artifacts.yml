@@ -14,7 +14,15 @@ on:
       go_version:
         description: Go version to be used for the build.
         required: true
-        type: string       
+        type: string 
+      release:
+        description: Number of released version. Not required.
+        required: false
+        type: string    
+      release_url: 
+        description: Release url to upload assets.
+        required: false
+        type: string   
 
 jobs:
   build:
@@ -33,7 +41,7 @@ jobs:
           xgo_version: latest
           go_version: ${{ inputs.go_version }}
           dest: build
-          prefix: sync_server
+          prefix: sync_server${{ inputs.release }}
           targets: ${{ matrix.os != 'macos' && matrix.os || 'darwin'}}/${{ matrix.architecture }}
           v: true
           x: false
@@ -45,5 +53,14 @@ jobs:
       - name: Upload SyncServer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: sync_server-${{ matrix.os }}-${{ matrix.architecture }}
+          name: sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
           path: build
+                  
+      - name: Upload Release Asset
+        if: ${{ inputs.release_url != '' }}
+        uses: glentiki/xbin-release-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:
+          upload_url: ${{ inputs.release_url }}
+          assets_path: ./build
