@@ -17,36 +17,17 @@ env:
 
 jobs:
   build_and_tests:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ env.GO_VERSION }}
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./... 
-
-  build-artifacts:
-    name: Artifacts
-    needs: build_and_tests
-    uses: ./.github/workflows/artifacts.yml
+    name: Test sync
     secrets: inherit
     with:
-      os: '["linux"]'
-      architectures: '["amd64", "arm64"]'
       go_version: '1.21'
+      upload: true
+    uses: ./.github/workflows/tests.yml
 
   build-docker-linux:
     name: Docker image
     needs: 
       - build_and_tests
-      - build-artifacts
     secrets: inherit
     with:
       os: linux
