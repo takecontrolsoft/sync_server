@@ -1,8 +1,6 @@
 name: Sync Server Test
 
 on:
-  push:
-    branches-ignore: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
