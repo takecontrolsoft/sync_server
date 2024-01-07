@@ -8,22 +8,23 @@ group "default" {
 
 target "sync_server" {
   tags = ["docker.io/takecontrolorg/sync_server:${TAG}"]
-  platforms = ["amd64", "arm64"]
 }
 
 target "sync_server_linux" {
   inherits = ["sync_server"]
-  dockerfile = "Dockerfile.linux"
+  dockerfile = "Dockerfile.linux"  
+  platforms = ["amd64"]
 }
 
 target "sync_server_macos" {
   inherits = ["sync_server"]
-  dockerfile = "Dockerfile.macos"
-
+  dockerfile = "Dockerfile.macos"  
+  platforms = ["amd64", "arm64"]
 }
 
 target "sync_server_windows" {
   inherits = ["sync_server"]
-  dockerfile = "Dockerfile.windows"
+  dockerfile = "Dockerfile.windows"  
+  platforms = ["amd64", "arm64"]
 }
 
