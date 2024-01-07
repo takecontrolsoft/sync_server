@@ -1,4 +1,4 @@
-name: Pre-release Sync Server
+name: Release
 # This workflow is triggered when a new tag is published
 # `git tag v0.0.1alpha`
 # `git push --tags`
@@ -14,9 +14,17 @@ env:
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
 
 jobs:
+    build_and_tests:
+      name: Test sync
+      secrets: inherit
+      with:
+        go_version: ${{ vars.GO_VERSION }}
+      uses: ./.github/workflows/w_tests.yml
+
     release:
       if: contains(github.ref, 'tags/v')
       runs-on: ubuntu-latest
+      needs: build_and_tests
       outputs: 
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         v_num:  ${{ steps.version.outputs.number }}
@@ -44,23 +52,22 @@ jobs:
     build-artifacts:
       name: Artifacts
       needs: release
-      uses: ./.github/workflows/artifacts.yml
+      uses: ./.github/workflows/w_artifacts.yml
       secrets: inherit
       with:
         os: '["linux", "windows", "macos"]'
         architectures: '["amd64","arm64"]'
-        go_version: '1.21'
+        go_version: ${{ vars.GO_VERSION }}
         release: -${{ needs.release.outputs.v_num }}
         release_url: ${{ needs.release.outputs.upload_url }}
 
-    build-docker-linux:
+    build-docker-images:
       name: Docker image
-      needs: 
-        - release
-        - build-artifacts
+      needs: build-artifacts
       secrets: inherit
       with:
-        os: linux
+        os: '["linux"]'
+        architectures: '["amd64", "arm64"]' 
         release: -${{ needs.release.outputs.v_num }}
-      uses: ./.github/workflows/docker.yml
+      uses: ./.github/workflows/w_docker.yml
             

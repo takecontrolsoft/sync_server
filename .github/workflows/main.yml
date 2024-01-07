@@ -1,4 +1,4 @@
-name: Sync Server
+name: Main
 
 on:
   push:
@@ -7,33 +7,31 @@ on:
 env:
   SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
-  GO_VERSION: '1.21'
 
 jobs:
   build_and_tests:
     name: Test sync
     secrets: inherit
     with:
-      go_version: '1.21'
-    uses: ./.github/workflows/tests.yml
+      go_version: ${{ vars.GO_VERSION }}
+    uses: ./.github/workflows/w_tests.yml
 
   build-artifacts:
     name: Artifacts
     needs: build_and_tests
-    uses: ./.github/workflows/artifacts.yml
+    uses: ./.github/workflows/w_artifacts.yml
     secrets: inherit
     with:
       os: '["linux"]'
-      architectures: '["amd64"]'
-      go_version: '1.21'
+      architectures: '["amd64", "arm64"]'
+      go_version: ${{ vars.GO_VERSION }}
 
-  build-docker-linux:
+  build-docker-images:
     name: Docker image
-    needs: 
-      - build_and_tests
-      - build-artifacts
+    needs: build-artifacts
     secrets: inherit
     with:
-      os: linux
-    uses: ./.github/workflows/docker.yml
+      os: '["linux"]'
+      architectures: '["amd64", "arm64"]' 
+    uses: ./.github/workflows/w_docker.yml
 
