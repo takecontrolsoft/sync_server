@@ -26,10 +26,7 @@ jobs:
       - name: Create architectures
         id: platforms
         run: |
-          echo "platforms=$(docker buildx bake sync_server_${{ inputs.os }} --print | jq -cr '.target."sync_server_${{ inputs.os }}".platforms')"
-          echo "os='${{ inputs.os }}/'"
-          echo "empty=''"
-          echo "architectures=$(${platforms//$os/$empty})" >>${GITHUB_OUTPUT}
+           echo "architectures=$({docker buildx bake sync_server_${{ inputs.os }} --print | jq -cr '.target."sync_server_${{ inputs.os }}".platforms'//'${{ inputs.os }}/'/''})" >>${GITHUB_OUTPUT}
       - name: Show architectures
         run: |
           echo ${{ steps.platforms.outputs.architectures }}
