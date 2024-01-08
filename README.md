@@ -13,4 +13,4 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/takecontrolorg/sync_server)
 
 # sync server
-Go server for processing files
+Golang server for uploading files and media files processing workflows.
