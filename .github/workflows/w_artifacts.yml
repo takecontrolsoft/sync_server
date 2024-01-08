@@ -52,7 +52,7 @@ jobs:
 
       - name: Rename files
         if: ${{ matrix.os == 'macos' }}
-        working-directory: /build
+        working-directory: build/
         run: |  
            mv sync_server${{ inputs.release }}-darwin-${{ matrix.architecture }} sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
 
