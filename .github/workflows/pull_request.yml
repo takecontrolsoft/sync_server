@@ -20,5 +20,24 @@ jobs:
       go_version: ${{ vars.GO_VERSION }}
     uses: ./.github/workflows/w_tests.yml
 
+  build-artifacts:
+    name: Artifacts
+    needs: build_and_tests
+    uses: ./.github/workflows/w_artifacts.yml
+    secrets: inherit
+    with:
+      os: '["linux"]'
+      architectures: '["amd64"]'
+      go_version: ${{ vars.GO_VERSION }}
+  
+  build-docker-images:
+    name: Docker image
+    needs: build-artifacts
+    secrets: inherit
+    with:
+      os: '["linux"]'
+      architectures: '["amd64"]' 
+    uses: ./.github/workflows/w_docker.yml
 
+  
 
