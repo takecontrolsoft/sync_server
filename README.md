@@ -1,7 +1,4 @@
-<picture>
-    <source srcset="https://takecontrolsoft.eu/wp-content/uploads/2023/11/TakeControlTransparentGreenLogo-1.png" alt="Sync Device by Take Control - software & infrastructure">
-    <img src="https://takecontrolsoft.eu/wp-content/uploads/2023/11/TakeControlTransparentGreenLogo-1.png" alt="Sync Device by Take Control - software & infrastructure" width="30%">
-</picture>
+<img src="https://takecontrolsoft.eu/wp-content/uploads/2023/11/TakeControlTransparentGreenLogo-1.png" alt="Sync Device by Take Control - software & infrastructure" width="15%">
 
 [![Release](https://img.shields.io/badge/Release-v0.0.1_alpha-yellow)](https://github.com/takecontrolsoft/sync_server/releases/tag/v0.0.1-alpha)
 [![Main](https://github.com/takecontrolsoft/sync_server/actions/workflows/main.yml/badge.svg)](https://github.com/takecontrolsoft/sync_server/actions/workflows/main.yml)
