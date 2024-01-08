@@ -8,4 +8,4 @@
 
 ### Compatibility
 * Linux, Windows and Mac
-* Go lang 1.20
+* Go lang 1.21
