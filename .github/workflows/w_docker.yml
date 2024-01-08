@@ -64,6 +64,10 @@ jobs:
         with:
           name: sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
           path: bin/
+      - name: Rename sync_server
+        working-directory: bin/
+        run: |  
+          mv sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }} sync_server
       - name: Download meta bake definition
         uses: actions/download-artifact@v4
         with:

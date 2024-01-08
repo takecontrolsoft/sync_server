@@ -50,6 +50,12 @@ jobs:
           buildmode: default
           trimpath: true 
 
+      - name: Rename files
+        if: ${{ matrix.os == 'macos' }}
+        working-directory: /build
+        run: |  
+           mv sync_server${{ inputs.release }}-darwin-${{ matrix.architecture }} sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
+
       - name: Upload SyncServer artifacts
         uses: actions/upload-artifact@v4
         with:
