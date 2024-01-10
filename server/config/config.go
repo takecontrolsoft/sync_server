@@ -19,9 +19,9 @@ package config
 
 import (
 	"fmt"
-	e "internal/errors_util"
-	"log"
 	"os"
+
+	"github.com/takecontrolsoft/logger"
 )
 
 // The maximum stream size that is allowed to be uploaded to the server.
@@ -49,28 +49,28 @@ var PortNumber int
 func InitFromEnvVariables() {
 	d, envSet := os.LookupEnv(UploadPathVariable)
 	if !envSet {
-		e.CrashOnError(ErrEnvVariableNotSet(UploadPathVariable))
+		logger.CrashOnError(ErrEnvVariableNotSet(UploadPathVariable))
 	}
 	if d == "" {
-		e.CrashOnError(ErrEnvVariableSetEmpty(UploadPathVariable))
+		logger.CrashOnError(ErrEnvVariableSetEmpty(UploadPathVariable))
 	}
 	port, envSet := os.LookupEnv(PortVariable)
 	if !envSet {
-		e.CrashOnError(ErrEnvVariableNotSet(PortVariable))
+		logger.CrashOnError(ErrEnvVariableNotSet(PortVariable))
 	}
 	var p int
 	if port == "" {
-		e.CrashOnError(ErrEnvVariableSetEmpty(PortVariable))
+		logger.CrashOnError(ErrEnvVariableSetEmpty(PortVariable))
 	} else {
 		_, err := fmt.Sscan(port, &p)
 		if err != nil {
-			e.CrashOnError(err)
+			logger.CrashOnError(err)
 		}
 	}
 
 	UploadDirectory = d
 	PortNumber = p
-	log.Printf("Server port: %d", PortNumber)
-	log.Printf("Storage path: %s", UploadDirectory)
+	logger.LogMessage(fmt.Sprintf("Server port: %d", PortNumber))
+	logger.LogMessage(fmt.Sprintf("Storage path: %s", UploadDirectory))
 
 }

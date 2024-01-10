@@ -17,18 +17,20 @@ limitations under the License.
 package services
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/takecontrolsoft/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	host "github.com/takecontrolsoft/sync_server/server/host"
 	"github.com/takecontrolsoft/sync_server/server/impl"
 )
 
-type FilesManagementService struct{}
+type FilesManagementService struct {
+	host.WebService
+}
 
 func (s FilesManagementService) Host() bool {
-	fmt.Println("FilesManagementService::Host()")
+	logger.LogMessage("FilesManagementService::Host()")
 	http.HandleFunc("/upload", impl.UploadHandler)
 
 	fs := http.FileServer(http.Dir(config.UploadDirectory))

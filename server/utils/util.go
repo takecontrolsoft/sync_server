@@ -1,17 +1,18 @@
 package utils
 
 import (
-	"internal/errors_util"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
+
+	l "github.com/takecontrolsoft/logger"
 )
 
 func RenderIfError(err error, w http.ResponseWriter, statusCode int) bool {
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
-		errors_util.LogError(err)
+		l.LogError(err)
 		return true
 	}
 	return false
@@ -20,7 +21,7 @@ func RenderIfError(err error, w http.ResponseWriter, statusCode int) bool {
 func RenderMessage(w http.ResponseWriter, message string, statusCode int) {
 	w.WriteHeader(statusCode)
 	w.Write([]byte(message))
-	errors_util.LogMessage(message)
+	l.LogMessage(message)
 }
 
 func IsAllowedFileType(fileType string, w http.ResponseWriter) bool {

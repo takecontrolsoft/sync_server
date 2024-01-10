@@ -19,9 +19,9 @@ package host
 
 import (
 	"fmt"
-	e "internal/errors_util"
-	"log"
 	"net/http"
+
+	"github.com/takecontrolsoft/logger"
 
 	"github.com/takecontrolsoft/sync_server/server/config"
 )
@@ -43,14 +43,13 @@ func RegisterWebService(s WebService) {
 
 // Start sync server and host all the registered web services.
 func Run() {
-	e.InitLogFile("server.log")
 	for _, service := range webServices {
 		service.Host()
 	}
-	fmt.Println("Sync server started.")
+	logger.LogMessage("Sync server started.")
 	err := http.ListenAndServe(fmt.Sprintf(":%d", config.PortNumber), nil)
 	if err != nil {
-		log.Fatal(err)
+		logger.CrashOnError(err)
 	}
 
 }

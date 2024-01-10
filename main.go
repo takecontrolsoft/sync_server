@@ -19,9 +19,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	e "internal/errors_util"
 	"os"
 
+	"github.com/takecontrolsoft/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/host"
 	"github.com/takecontrolsoft/sync_server/server/services"
@@ -47,16 +47,16 @@ func main() {
 		config.InitFromEnvVariables()
 	} else {
 		if directory == "" {
-			e.CrashOnError(config.ErrStoragePathEmpty)
+			logger.CrashOnError(config.ErrStoragePathEmpty)
 		}
 		config.PortNumber = port
 		config.UploadDirectory = directory
 	}
 
-	fmt.Println("Starting Sync server ...")
+	logger.LogMessage("Starting Sync server ...")
 
-	fmt.Printf(" - port = %d\n", config.PortNumber)
-	fmt.Printf(" - storage path = %s\n", config.UploadDirectory)
+	logger.LogMessage(fmt.Sprintf(" - port = %d\n", config.PortNumber))
+	logger.LogMessage(fmt.Sprintf(" - storage path = %s\n", config.UploadDirectory))
 
 	services.Load()
 	host.Run()

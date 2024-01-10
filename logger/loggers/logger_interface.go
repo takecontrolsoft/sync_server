@@ -1,4 +1,4 @@
-/* Copyright 2023 Take Control - Software & Infrastructure
+/* Copyright 2024 Take Control - Software & Infrastructure
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,11 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package services
+package loggers
 
-import "github.com/takecontrolsoft/logger"
-
-// This method allows package 'service' to be imported.
-func Load() {
-	logger.LogMessage("Importing Sync server web services ...")
+type LoggerInterface interface {
+	CrashOnError(log_err error)
+	LogError(log_err error)
+	LogMessage(message string)
 }

@@ -1,6 +1,6 @@
 go 1.21
 
 use (
-    .
-	./internal/errors_util
+	.
+	./logger
 )

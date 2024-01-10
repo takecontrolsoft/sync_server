@@ -1,4 +1,4 @@
-/* Copyright 2023 Take Control - Software & Infrastructure
+/* Copyright 2024 Take Control - Software & Infrastructure
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,40 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package errors_util provides functions for errors and logs.
-package errors_util
+package loggers
 
-import (
-	"log"
-	"os"
-)
-
-func InitLogFile(logFileName string) {
-	fLog, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	log.SetOutput(fLog)
-	CrashOnError(err)
-	defer saveLog(fLog)
+type ConsoleLogger struct {
+	LoggerInterface
 }
 
-func CrashOnError(err error) {
+func (logger *ConsoleLogger) CrashOnError(err error) {
 	if err != nil {
-		log.Printf("ERROR: [%v]", err)
 		panic(err)
+
 	}
 }
 
-func LogError(err error) {
+func (logger *ConsoleLogger) LogError(err error) {
 	if err != nil {
-		log.Printf("ERROR: [%v]", err)
-		println(err)
+		println("ERROR: [%v]", err)
 	}
 }
 
-func LogMessage(message string) {
-	log.Println(message)
+func (logger *ConsoleLogger) LogMessage(message string) {
 	println(message)
-}
-
-func saveLog(fLog *os.File) {
-	fLog.Close()
 }
