@@ -23,5 +23,5 @@ func init() {
 }
 
 func TestValidFiles(t *testing.T) {
-	LogMessage("kmlkmlm")
+	LogMessage("Log this")
 }

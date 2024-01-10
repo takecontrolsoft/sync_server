@@ -27,8 +27,7 @@ type FileLogger struct {
 func (logger *FileLogger) CrashOnError(log_err error) {
 	fLog := setFileLog(logger)
 	defer fLog.Close()
-	log.Printf("ERROR: [%v]", log_err)
-	panic(log_err)
+	log.Fatalf("ERROR: [%v]", log_err)
 }
 
 func (logger *FileLogger) LogError(log_err error) {

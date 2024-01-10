@@ -6,22 +6,22 @@ import (
 	"strings"
 	"time"
 
-	l "github.com/takecontrolsoft/logger"
+	"github.com/takecontrolsoft/logger"
 )
 
 func RenderIfError(err error, w http.ResponseWriter, statusCode int) bool {
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
-		l.LogError(err)
+		logger.LogError(err)
 		return true
 	}
 	return false
 }
 
-func RenderMessage(w http.ResponseWriter, message string, statusCode int) {
+func RenderError(w http.ResponseWriter, err error, statusCode int) {
 	w.WriteHeader(statusCode)
-	w.Write([]byte(message))
-	l.LogMessage(message)
+	w.Write([]byte(err.Error()))
+	logger.LogError(err)
 }
 
 func IsAllowedFileType(fileType string, w http.ResponseWriter) bool {
