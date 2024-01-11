@@ -15,23 +15,30 @@ limitations under the License.
 
 package loggers
 
+import (
+	"log"
+	"os"
+)
+
 type ConsoleLogger struct {
 	LoggerInterface
 }
 
 func (logger *ConsoleLogger) CrashOnError(err error) {
 	if err != nil {
-		panic(err)
-
+		log.SetOutput(os.Stdout)
+		log.Fatalf("ERROR: [%v]\n", err)
 	}
 }
 
 func (logger *ConsoleLogger) LogError(err error) {
 	if err != nil {
-		println("ERROR: [%v]", err)
+		log.SetOutput(os.Stdout)
+		log.Printf("ERROR: [%v]\n", err)
 	}
 }
 
 func (logger *ConsoleLogger) LogMessage(message string) {
-	println(message)
+	log.SetOutput(os.Stdout)
+	log.Println(message)
 }
