@@ -24,21 +24,12 @@ type ConsoleLogger struct {
 	LoggerInterface
 }
 
-func (logger *ConsoleLogger) CrashOnError(err error) {
-	if err != nil {
-		log.SetOutput(os.Stdout)
-		log.Fatalf("ERROR: [%v]\n", err)
-	}
-}
-
-func (logger *ConsoleLogger) LogError(err error) {
-	if err != nil {
-		log.SetOutput(os.Stdout)
-		log.Printf("ERROR: [%v]\n", err)
-	}
-}
-
-func (logger *ConsoleLogger) LogMessage(message string) {
+func (logger *ConsoleLogger) Log(level int, arg any) {
 	log.SetOutput(os.Stdout)
-	log.Println(message)
+	multi_log(level, arg)
+}
+
+func (logger *ConsoleLogger) LogF(level int, format string, args ...interface{}) {
+	log.SetOutput(os.Stdout)
+	multi_logF(level, format, args...)
 }

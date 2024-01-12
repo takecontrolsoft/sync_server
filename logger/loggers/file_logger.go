@@ -16,34 +16,30 @@ limitations under the License.
 package loggers
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
 
 type FileLogger struct {
 	LoggerInterface
+	FilePrefix string
 }
 
-func (logger *FileLogger) CrashOnError(log_err error) {
+func (logger *FileLogger) Log(level int, arg any) {
 	fLog := setFileLog(logger)
 	defer fLog.Close()
-	log.Fatalf("ERROR: [%v]", log_err)
+	multi_log(level, arg)
 }
 
-func (logger *FileLogger) LogError(log_err error) {
+func (logger *FileLogger) LogF(level int, format string, args ...interface{}) {
 	fLog := setFileLog(logger)
 	defer fLog.Close()
-	log.Printf("ERROR: [%v]", log_err)
-}
-
-func (logger *FileLogger) LogMessage(message string) {
-	fLog := setFileLog(logger)
-	defer fLog.Close()
-	log.Println(message)
+	multi_logF(level, format, args...)
 }
 
 func setFileLog(logger *FileLogger) *os.File {
-	fLog, err := os.OpenFile("server_log.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	fLog, err := os.OpenFile(fmt.Sprintf("%s.log", logger.FilePrefix), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}

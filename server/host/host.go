@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/takecontrolsoft/logger"
+	"github.com/takecontrolsoft/go_multi_log/logger"
 
 	"github.com/takecontrolsoft/sync_server/server/config"
 )
@@ -46,10 +46,10 @@ func Run() {
 	for _, service := range webServices {
 		service.Host()
 	}
-	logger.LogMessage("Sync server started.")
+	logger.Info("Sync server started.")
 	err := http.ListenAndServe(fmt.Sprintf(":%d", config.PortNumber), nil)
 	if err != nil {
-		logger.CrashOnError(err)
+		logger.Fatal(err)
 	}
 
 }

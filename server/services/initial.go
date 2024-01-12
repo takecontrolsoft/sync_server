@@ -15,9 +15,9 @@ limitations under the License.
 
 package services
 
-import "github.com/takecontrolsoft/logger"
+import "github.com/takecontrolsoft/go_multi_log/logger"
 
 // This method allows package 'service' to be imported.
 func Load() {
-	logger.LogMessage("Importing Sync server web services ...")
+	logger.Info("Importing Sync server web services ...")
 }

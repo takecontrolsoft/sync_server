@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/takecontrolsoft/logger"
+	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
@@ -75,7 +75,7 @@ func postUpload(field string, name string, t *testing.T) error {
 	go writeAsync(w, m, field, name)
 	req, err := http.NewRequest("POST", "/upload", r)
 	if err != nil {
-		logger.LogError(err)
+		logger.Error(err)
 		return err
 	}
 	req.Header.Set("Content-Type", m.FormDataContentType())
@@ -107,17 +107,17 @@ func writeAsync(w *io.PipeWriter, m *multipart.Writer, field string, fn string) 
 	f := filepath.Base(fn)
 	part, err := m.CreateFormFile(field, f)
 	if err != nil {
-		logger.LogError(err)
+		logger.Error(err)
 		return
 	}
 	file, err := fs.Open(fn)
 	if err != nil {
-		logger.LogError(err)
+		logger.Error(err)
 		return
 	}
 	defer file.Close()
 	if _, err = io.Copy(part, file); err != nil {
-		logger.LogError(err)
+		logger.Error(err)
 		return
 	}
 }

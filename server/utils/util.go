@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/takecontrolsoft/logger"
+	"github.com/takecontrolsoft/go_multi_log/logger"
 )
 
 func RenderIfError(err error, w http.ResponseWriter, statusCode int) bool {
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
-		logger.LogError(err)
+		logger.Error(err)
 		return true
 	}
 	return false
@@ -21,7 +21,7 @@ func RenderIfError(err error, w http.ResponseWriter, statusCode int) bool {
 func RenderError(w http.ResponseWriter, err error, statusCode int) {
 	w.WriteHeader(statusCode)
 	w.Write([]byte(err.Error()))
-	logger.LogError(err)
+	logger.Error(err)
 }
 
 func IsAllowedFileType(fileType string, w http.ResponseWriter) bool {

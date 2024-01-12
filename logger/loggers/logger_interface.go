@@ -15,8 +15,49 @@ limitations under the License.
 
 package loggers
 
+import (
+	"fmt"
+	"log"
+)
+
 type LoggerInterface interface {
-	CrashOnError(log_err error)
-	LogError(log_err error)
-	LogMessage(message string)
+	Log(level int, arg any)
+	LogF(level int, format string, args ...interface{})
+}
+
+const (
+	DebugLevel   = 1
+	TraceLevel   = 2
+	InfoLevel    = 3
+	WarningLevel = 4
+	ErrorLevel   = 5
+	FatalLevel   = 6
+)
+
+func multi_log(level int, arg any) {
+	format := fmt.Sprintf("%s: [%s]", logLevelName(level), "%v")
+	multi_logF(level, format, arg)
+}
+
+func multi_logF(level int, format string, args ...interface{}) {
+	log.Printf(format, args...)
+}
+
+func logLevelName(level int) string {
+	switch logLevel := level; logLevel {
+	case DebugLevel:
+		return "DEBUG"
+	case TraceLevel:
+		return "TRACE"
+	case InfoLevel:
+		return "INFO"
+	case WarningLevel:
+		return "WARNING"
+	case ErrorLevel:
+		return "ERROR"
+	case FatalLevel:
+		return "FATAL"
+	default:
+		return "UNKNOWN"
+	}
 }

@@ -13,15 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package logger
+package logger_test
 
 import (
 	"testing"
+
+	"github.com/go-errors/errors"
+	"github.com/takecontrolsoft/go_multi_log/logger"
 )
 
 func init() {
 }
 
-func TestValidFiles(t *testing.T) {
-	LogMessage("Log this")
+func TestLogs(t *testing.T) {
+	logger.Debug("Test log [debug] message")
+	logger.Trace("Test log [trace] message")
+	logger.Info("Test log [info] message")
+	logger.Error(errors.Errorf("Test error.").Err)
+	logger.Error("Test log [error] message")
+	logger.Fatal("Test log [fatal] message")
 }
