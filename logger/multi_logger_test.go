@@ -20,23 +20,31 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/go_multi_log/logger"
+	"github.com/takecontrolsoft/go_multi_log/logger/loggers"
 )
 
 func init() {
 }
 
 func TestLogs(t *testing.T) {
+	//levels.FatalLevel
+	logger.DefaultLogger().Stop()
 	logger.Debug("Test log [debug] message")
 	logger.Trace("Test log [trace] message")
 	logger.Info("Test log [info] message")
 	logger.Error(errors.Errorf("Test error.").Err)
+	logger.DefaultLogger().Start()
 	logger.Error("Test log [error] message")
 	//logger.Fatal("Test log [fatal] message")
 }
 
 func TestLogLevel(t *testing.T) {
-	logger.Debug("Test log [debug] message")
-	logger.Trace("Test log [trace] message")
+	_, err := logger.RegisterLogger("file", loggers.NewFileLoggerDefault())
+	if err != nil {
+		t.Fatal(err)
+	}
+	logger.DefaultLogger().Stop()
+	logger.GetLogger("file").Stop()
 	logger.Info("Test log [info] message")
 	logger.Error(errors.Errorf("Test error.").Err)
 	logger.Error("Test log [error] message")

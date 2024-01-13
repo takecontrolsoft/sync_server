@@ -18,33 +18,35 @@ package loggers
 import (
 	"log"
 	"os"
+
+	"github.com/takecontrolsoft/go_multi_log/logger/levels"
 )
 
 type ConsoleLogger struct {
-	loggerType
+	LoggerType
 }
 
 func NewConsoleLoggerDefault() *ConsoleLogger {
 	return &ConsoleLogger{
-		loggerType: loggerType{Level: InfoLevel},
+		LoggerType: LoggerType{Level: levels.InfoLevel},
 	}
 }
 
 func NewConsoleLogger(level int, format string) *ConsoleLogger {
 	return &ConsoleLogger{
-		loggerType: loggerType{Level: level, Format: format},
+		LoggerType: LoggerType{Level: level, Format: format},
 	}
 }
 
 func (logger *ConsoleLogger) Log(level int, arg any) {
-	if logger.IsLogLevelAllowed(level) {
+	if logger.IsLogAllowed(level) {
 		log.SetOutput(os.Stdout)
 		logger.multi_log(level, arg)
 	}
 }
 
 func (logger *ConsoleLogger) LogF(level int, format string, args ...interface{}) {
-	if logger.IsLogLevelAllowed(level) {
+	if logger.IsLogAllowed(level) {
 		log.SetOutput(os.Stdout)
 		logger.multi_logF(level, format, args...)
 	}

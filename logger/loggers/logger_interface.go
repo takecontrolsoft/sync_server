@@ -19,64 +19,68 @@ import (
 	"fmt"
 	"log"
 	"strings"
-)
 
-const (
-	DebugLevel   int = 1
-	TraceLevel   int = 2
-	InfoLevel    int = 3
-	WarningLevel int = 4
-	ErrorLevel   int = 5
-	FatalLevel   int = 6
+	"github.com/takecontrolsoft/go_multi_log/logger/levels"
 )
 
 type LoggerInterface interface {
 	Log(level int, arg any)
 	LogF(level int, format string, args ...interface{})
-	GetLevel()
+	GetLevel() int
 	SetLevel(level int)
+	Start()
+	Stop()
 }
 
-type loggerType struct {
+type LoggerType struct {
 	LoggerInterface
-	Level  int
-	Format string
+	Level     int
+	Format    string
+	isStopped bool
 }
 
-func (logger *loggerType) IsLogLevelAllowed(level int) bool {
-	return level >= logger.Level
+func (logger *LoggerType) IsLogAllowed(level int) bool {
+	return !logger.isStopped && level >= logger.Level
 }
 
-func (logger *loggerType) GetLevel() int {
+func (logger *LoggerType) GetLevel() int {
 	return logger.Level
 }
 
-func (logger *loggerType) SetLevel(level int) {
+func (logger *LoggerType) SetLevel(level int) {
 	logger.Level = level
 }
 
-func (logger *loggerType) multi_log(level int, arg any) {
+func (logger *LoggerType) Start() {
+	logger.isStopped = false
+}
+
+func (logger *LoggerType) Stop() {
+	logger.isStopped = true
+}
+
+func (logger *LoggerType) multi_log(level int, arg any) {
 	format := fmt.Sprintf("%s: [%s]", strings.ToUpper(GetLogLevelName(level)), "%v")
 	logger.multi_logF(level, format, arg)
 }
 
-func (logger *loggerType) multi_logF(level int, format string, args ...interface{}) {
+func (logger *LoggerType) multi_logF(level int, format string, args ...interface{}) {
 	log.Printf(format, args...)
 }
 
 func GetLogLevelName(level int) string {
 	switch logLevel := level; logLevel {
-	case DebugLevel:
+	case levels.DebugLevel:
 		return "Debug"
-	case TraceLevel:
+	case levels.TraceLevel:
 		return "Trace"
-	case InfoLevel:
+	case levels.InfoLevel:
 		return "Info"
-	case WarningLevel:
+	case levels.WarningLevel:
 		return "Warning"
-	case ErrorLevel:
+	case levels.ErrorLevel:
 		return "Error"
-	case FatalLevel:
+	case levels.FatalLevel:
 		return "Fatal"
 	default:
 		return "Unknown"

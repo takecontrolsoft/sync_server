@@ -27,26 +27,28 @@ package logger
 import (
 	"sync"
 
+	"github.com/go-errors/errors"
+	"github.com/takecontrolsoft/go_multi_log/logger/levels"
 	"github.com/takecontrolsoft/go_multi_log/logger/loggers"
 )
 
 var lock = &sync.Mutex{}
 
 type multiLog struct {
-	registered_loggers []loggers.LoggerInterface
+	registered_loggers map[string]loggers.LoggerInterface
 }
 
 var mLogger *multiLog
 
-func getLogger() *multiLog {
+func getMultiLog() *multiLog {
 	if mLogger == nil {
 		lock.Lock()
 		defer lock.Unlock()
 		if mLogger == nil {
 			mLogger = &multiLog{
-				registered_loggers: []loggers.LoggerInterface{
-					loggers.NewConsoleLoggerDefault(),
-					loggers.NewFileLoggerDefault()},
+				registered_loggers: map[string]loggers.LoggerInterface{
+					"": loggers.NewConsoleLoggerDefault(),
+				},
 			}
 		}
 	}
@@ -66,66 +68,95 @@ func _logF(logger loggers.LoggerInterface, format string, level int, args ...int
 }
 
 func logAll(fn fnLog, level int, arg any) {
-	mLogger = getLogger()
+	mLogger = getMultiLog()
 	for _, logger := range mLogger.registered_loggers {
 		fn(logger, level, arg)
 	}
-	if level == loggers.FatalLevel {
+	if level == levels.FatalLevel {
 		panic(arg)
 	}
 }
 
 func logFAll(fn fnLogF, format string, level int, args ...interface{}) {
-	mLogger = getLogger()
+	mLogger = getMultiLog()
 	for _, logger := range mLogger.registered_loggers {
 		fn(logger, format, level, args...)
 	}
 }
 
+func RegisterLogger(key string, logger loggers.LoggerInterface) (loggers.LoggerInterface, error) {
+	if len(key) == 0 {
+		return logger, errors.Errorf("Empty key is not allowed for registering loggers.").Err
+	}
+	mLogger = getMultiLog()
+	mLogger.registered_loggers[key] = logger
+	return logger, nil
+}
+
+func UnregisterLogger(key string) (loggers.LoggerInterface, error) {
+	mLogger = getMultiLog()
+	logger := mLogger.registered_loggers[key]
+	if logger == nil {
+		return nil, errors.Errorf("A logger for given key does not exists.").Err
+	}
+	delete(mLogger.registered_loggers, key)
+	return logger, nil
+}
+
+func GetLogger(key string) loggers.LoggerInterface {
+	mLogger = getMultiLog()
+	logger := mLogger.registered_loggers[key]
+	return logger
+}
+
+func DefaultLogger() loggers.LoggerInterface {
+	return GetLogger("")
+}
+
 func Debug(arg any) {
-	logAll(_log, loggers.DebugLevel, arg)
+	logAll(_log, levels.DebugLevel, arg)
 }
 
 func Trace(arg any) {
-	logAll(_log, loggers.TraceLevel, arg)
+	logAll(_log, levels.TraceLevel, arg)
 }
 
 func Info(arg any) {
-	logAll(_log, loggers.InfoLevel, arg)
+	logAll(_log, levels.InfoLevel, arg)
 }
 
 func Warning(arg any) {
-	logAll(_log, loggers.WarningLevel, arg)
+	logAll(_log, levels.WarningLevel, arg)
 }
 
 func Error(arg any) {
-	logAll(_log, loggers.ErrorLevel, arg)
+	logAll(_log, levels.ErrorLevel, arg)
 }
 
 func Fatal(arg any) {
-	logAll(_log, loggers.FatalLevel, arg)
+	logAll(_log, levels.FatalLevel, arg)
 }
 
 func DebugF(format string, args ...interface{}) {
-	logFAll(_logF, format, loggers.DebugLevel, args...)
+	logFAll(_logF, format, levels.DebugLevel, args...)
 }
 
 func TraceF(format string, args ...interface{}) {
-	logFAll(_logF, format, loggers.TraceLevel, args...)
+	logFAll(_logF, format, levels.TraceLevel, args...)
 }
 
 func InfoF(format string, args ...interface{}) {
-	logFAll(_logF, format, loggers.InfoLevel, args...)
+	logFAll(_logF, format, levels.InfoLevel, args...)
 }
 
 func WarningF(format string, args ...interface{}) {
-	logFAll(_logF, format, loggers.WarningLevel, args...)
+	logFAll(_logF, format, levels.WarningLevel, args...)
 }
 
 func ErrorF(format string, args ...interface{}) {
-	logFAll(_logF, format, loggers.ErrorLevel, args...)
+	logFAll(_logF, format, levels.ErrorLevel, args...)
 }
 
 func FatalF(format string, args ...interface{}) {
-	logFAll(_logF, format, loggers.FatalLevel, args...)
+	logFAll(_logF, format, levels.FatalLevel, args...)
 }

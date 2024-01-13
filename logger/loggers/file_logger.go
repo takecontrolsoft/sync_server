@@ -19,10 +19,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/takecontrolsoft/go_multi_log/logger/levels"
 )
 
 type FileLogger struct {
-	loggerType
+	LoggerType
 	FileOptions
 }
 
@@ -32,20 +34,20 @@ type FileOptions struct {
 
 func NewFileLoggerDefault() *FileLogger {
 	return &FileLogger{
-		loggerType:  loggerType{Level: InfoLevel},
+		LoggerType:  LoggerType{Level: levels.InfoLevel},
 		FileOptions: FileOptions{FilePrefix: "sync_server", FileExtension: ".log"},
 	}
 }
 
 func NewFileLogger(level int, format string, options FileOptions) *FileLogger {
 	return &FileLogger{
-		loggerType:  loggerType{Level: level, Format: format},
+		LoggerType:  LoggerType{Level: level, Format: format},
 		FileOptions: options,
 	}
 }
 
 func (logger *FileLogger) Log(level int, arg any) {
-	if logger.IsLogLevelAllowed(level) {
+	if logger.IsLogAllowed(level) {
 		fLog := setFileLog(logger)
 		defer fLog.Close()
 		logger.multi_log(level, arg)
@@ -53,7 +55,7 @@ func (logger *FileLogger) Log(level int, arg any) {
 }
 
 func (logger *FileLogger) LogF(level int, format string, args ...interface{}) {
-	if logger.IsLogLevelAllowed(level) {
+	if logger.IsLogAllowed(level) {
 		fLog := setFileLog(logger)
 		defer fLog.Close()
 		logger.multi_logF(level, format, args...)
