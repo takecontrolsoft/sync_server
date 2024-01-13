@@ -30,6 +30,7 @@ func main() {
 
 	var port int
 	var directory string
+	var logPath string
 
 	portHelp := `TCP port number on witch the sync server can be reached. Defaults to 80.`
 	flag.IntVar(&port, "p", 8080, portHelp)
@@ -39,6 +40,12 @@ func main() {
 	Absolute path is required in DOS or UNC format.
 	Make sure the server process has read/write access to this location.`
 	flag.StringVar(&directory, "d", "", directoryHelp)
+
+	logPathHelp := `Path location for the log files. 
+	It not set, the log files will be stored to the executable file location.
+	Absolute path is required in DOS or UNC format.
+	Make sure the server process has read/write access to this location.`
+	flag.StringVar(&logPath, "l", "", logPathHelp)
 
 	flag.Parse()
 
@@ -50,12 +57,14 @@ func main() {
 		}
 		config.PortNumber = port
 		config.UploadDirectory = directory
+		config.LogPath = logPath
 	}
 
 	logger.Info("Starting Sync server ...")
 
 	logger.InfoF(" - port = %d\n", config.PortNumber)
 	logger.InfoF(" - storage path = %s\n", config.UploadDirectory)
+	logger.InfoF(" - log path = %s\n", config.LogPath)
 	services.Load()
 	host.Run()
 }

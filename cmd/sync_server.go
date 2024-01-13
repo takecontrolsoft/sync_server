@@ -31,6 +31,7 @@ func main() {
 
 	var port int
 	var directory string
+	var logPath string
 
 	portHelp := `TCP port number on witch the sync server can be reached. Defaults to 80.`
 	flag.IntVar(&port, "p", 8080, portHelp)
@@ -40,6 +41,12 @@ func main() {
 	Absolute path is required in DOS or UNC format.
 	Make sure the server process has read/write access to this location.`
 	flag.StringVar(&directory, "d", "", directoryHelp)
+
+	logPathHelp := `Path location for the log files. 
+	It not set, the log files will be stored to the executable file location.
+	Absolute path is required in DOS or UNC format.
+	Make sure the server process has read/write access to this location.`
+	flag.StringVar(&logPath, "l", "", logPathHelp)
 
 	flag.Parse()
 
@@ -80,11 +87,31 @@ func main() {
 			}
 		}
 		config.PortNumber = port
+
+		if logPath == "" {
+			fmt.Printf("Please enter log files location:")
+			for scanner.Scan() {
+				v := scanner.Text()
+				if v != "" {
+					_, err := fmt.Sscan(v, &logPath)
+					if err != nil {
+						fmt.Println(v, err, reflect.TypeOf(logPath))
+					} else {
+						break
+					}
+				} else {
+					logPath = ""
+					break
+				}
+			}
+		}
+		config.LogPath = logPath
 	}
 	fmt.Println("Starting Sync server ...")
 
 	fmt.Printf(" - port = %d\n", config.PortNumber)
 	fmt.Printf(" - storage path = %s\n", config.UploadDirectory)
+	fmt.Printf(" - log files path = %s\n", config.LogPath)
 
 	host.Run()
 }

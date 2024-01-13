@@ -38,11 +38,20 @@ const UploadPathVariable string = "SYNC_STORAGE_PATH"
 // on witch the server can be reached.
 const PortVariable = "SYNC_SERVER_PORT"
 
+// The name of the environment variable with the path fo log files.
+// This value should point to the directory where the log files to be stored.
+// Absolute path is required in DOS or UNC format.
+// Make sure the server process has read/write access to this location.
+const LogPathVariable string = "LOG_PATH"
+
 // Global variable for storage directory path
 var UploadDirectory string
 
 // Global variable for port number
 var PortNumber int
+
+// Global variable for log directory path
+var LogPath string
 
 // Initialize the variables [UploadDirectory] and [PortNumber]
 // from the environment variables [UploadPathVariable] and [PortVariable].
@@ -67,9 +76,16 @@ func InitFromEnvVariables() {
 			logger.Fatal(err)
 		}
 	}
+	l, envSet := os.LookupEnv(LogPathVariable)
+	if !envSet {
+		l = ""
+	}
 
 	UploadDirectory = d
 	PortNumber = p
+	LogPath = l
 	logger.InfoF("Server port: %d", PortNumber)
 	logger.InfoF(fmt.Sprintf("Storage path: %s", UploadDirectory))
+	logger.InfoF(fmt.Sprintf("Log path: %s", LogPath))
+
 }
