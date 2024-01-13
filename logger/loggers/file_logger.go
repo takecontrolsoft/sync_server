@@ -22,20 +22,42 @@ import (
 )
 
 type FileLogger struct {
-	LoggerInterface
-	FilePrefix string
+	loggerType
+	FileOptions
+}
+
+type FileOptions struct {
+	FilePrefix, FileExtension string
+}
+
+func NewFileLoggerDefault() *FileLogger {
+	return &FileLogger{
+		loggerType:  loggerType{Level: InfoLevel},
+		FileOptions: FileOptions{FilePrefix: "sync_server", FileExtension: ".log"},
+	}
+}
+
+func NewFileLogger(level int, format string, options FileOptions) *FileLogger {
+	return &FileLogger{
+		loggerType:  loggerType{Level: level, Format: format},
+		FileOptions: options,
+	}
 }
 
 func (logger *FileLogger) Log(level int, arg any) {
-	fLog := setFileLog(logger)
-	defer fLog.Close()
-	multi_log(level, arg)
+	if logger.IsLogLevelAllowed(level) {
+		fLog := setFileLog(logger)
+		defer fLog.Close()
+		logger.multi_log(level, arg)
+	}
 }
 
 func (logger *FileLogger) LogF(level int, format string, args ...interface{}) {
-	fLog := setFileLog(logger)
-	defer fLog.Close()
-	multi_logF(level, format, args...)
+	if logger.IsLogLevelAllowed(level) {
+		fLog := setFileLog(logger)
+		defer fLog.Close()
+		logger.multi_logF(level, format, args...)
+	}
 }
 
 func setFileLog(logger *FileLogger) *os.File {

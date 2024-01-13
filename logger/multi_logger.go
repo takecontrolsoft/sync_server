@@ -45,8 +45,8 @@ func getLogger() *multiLog {
 		if mLogger == nil {
 			mLogger = &multiLog{
 				registered_loggers: []loggers.LoggerInterface{
-					&loggers.ConsoleLogger{},
-					&loggers.FileLogger{}},
+					loggers.NewConsoleLoggerDefault(),
+					loggers.NewFileLoggerDefault()},
 			}
 		}
 	}

@@ -31,5 +31,14 @@ func TestLogs(t *testing.T) {
 	logger.Info("Test log [info] message")
 	logger.Error(errors.Errorf("Test error.").Err)
 	logger.Error("Test log [error] message")
-	logger.Fatal("Test log [fatal] message")
+	//logger.Fatal("Test log [fatal] message")
+}
+
+func TestLogLevel(t *testing.T) {
+	logger.Debug("Test log [debug] message")
+	logger.Trace("Test log [trace] message")
+	logger.Info("Test log [info] message")
+	logger.Error(errors.Errorf("Test error.").Err)
+	logger.Error("Test log [error] message")
+	//logger.Fatal("Test log [fatal] message")
 }

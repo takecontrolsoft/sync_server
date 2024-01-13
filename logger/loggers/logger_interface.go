@@ -18,46 +18,67 @@ package loggers
 import (
 	"fmt"
 	"log"
+	"strings"
+)
+
+const (
+	DebugLevel   int = 1
+	TraceLevel   int = 2
+	InfoLevel    int = 3
+	WarningLevel int = 4
+	ErrorLevel   int = 5
+	FatalLevel   int = 6
 )
 
 type LoggerInterface interface {
 	Log(level int, arg any)
 	LogF(level int, format string, args ...interface{})
+	GetLevel()
+	SetLevel(level int)
 }
 
-const (
-	DebugLevel   = 1
-	TraceLevel   = 2
-	InfoLevel    = 3
-	WarningLevel = 4
-	ErrorLevel   = 5
-	FatalLevel   = 6
-)
-
-func multi_log(level int, arg any) {
-	format := fmt.Sprintf("%s: [%s]", logLevelName(level), "%v")
-	multi_logF(level, format, arg)
+type loggerType struct {
+	LoggerInterface
+	Level  int
+	Format string
 }
 
-func multi_logF(level int, format string, args ...interface{}) {
+func (logger *loggerType) IsLogLevelAllowed(level int) bool {
+	return level >= logger.Level
+}
+
+func (logger *loggerType) GetLevel() int {
+	return logger.Level
+}
+
+func (logger *loggerType) SetLevel(level int) {
+	logger.Level = level
+}
+
+func (logger *loggerType) multi_log(level int, arg any) {
+	format := fmt.Sprintf("%s: [%s]", strings.ToUpper(GetLogLevelName(level)), "%v")
+	logger.multi_logF(level, format, arg)
+}
+
+func (logger *loggerType) multi_logF(level int, format string, args ...interface{}) {
 	log.Printf(format, args...)
 }
 
-func logLevelName(level int) string {
+func GetLogLevelName(level int) string {
 	switch logLevel := level; logLevel {
 	case DebugLevel:
-		return "DEBUG"
+		return "Debug"
 	case TraceLevel:
-		return "TRACE"
+		return "Trace"
 	case InfoLevel:
-		return "INFO"
+		return "Info"
 	case WarningLevel:
-		return "WARNING"
+		return "Warning"
 	case ErrorLevel:
-		return "ERROR"
+		return "Error"
 	case FatalLevel:
-		return "FATAL"
+		return "Fatal"
 	default:
-		return "UNKNOWN"
+		return "Unknown"
 	}
 }

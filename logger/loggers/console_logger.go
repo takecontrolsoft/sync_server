@@ -21,15 +21,31 @@ import (
 )
 
 type ConsoleLogger struct {
-	LoggerInterface
+	loggerType
+}
+
+func NewConsoleLoggerDefault() *ConsoleLogger {
+	return &ConsoleLogger{
+		loggerType: loggerType{Level: InfoLevel},
+	}
+}
+
+func NewConsoleLogger(level int, format string) *ConsoleLogger {
+	return &ConsoleLogger{
+		loggerType: loggerType{Level: level, Format: format},
+	}
 }
 
 func (logger *ConsoleLogger) Log(level int, arg any) {
-	log.SetOutput(os.Stdout)
-	multi_log(level, arg)
+	if logger.IsLogLevelAllowed(level) {
+		log.SetOutput(os.Stdout)
+		logger.multi_log(level, arg)
+	}
 }
 
 func (logger *ConsoleLogger) LogF(level int, format string, args ...interface{}) {
-	log.SetOutput(os.Stdout)
-	multi_logF(level, format, args...)
+	if logger.IsLogLevelAllowed(level) {
+		log.SetOutput(os.Stdout)
+		logger.multi_logF(level, format, args...)
+	}
 }
