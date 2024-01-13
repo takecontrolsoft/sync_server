@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/takecontrolsoft/go_multi_log/logger/levels"
+	"github.com/timandy/routine"
 )
 
 type FileLogger struct {
@@ -29,7 +31,7 @@ type FileLogger struct {
 }
 
 type FileOptions struct {
-	FilePrefix, FileExtension string
+	Directory, FilePrefix, FileExtension string
 }
 
 func NewFileLoggerDefault() *FileLogger {
@@ -63,7 +65,10 @@ func (logger *FileLogger) LogF(level int, format string, args ...interface{}) {
 }
 
 func setFileLog(logger *FileLogger) *os.File {
-	fLog, err := os.OpenFile(fmt.Sprintf("%s.log", logger.FilePrefix), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	goid := routine.Goid()
+	fName := fmt.Sprintf("%s_%d_%d%s", logger.FilePrefix, os.Getpid(), goid, logger.FileExtension)
+	logFile := filepath.Join(logger.Directory, fName)
+	fLog, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}

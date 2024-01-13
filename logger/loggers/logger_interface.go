@@ -34,8 +34,9 @@ type LoggerInterface interface {
 
 type LoggerType struct {
 	LoggerInterface
-	Level     int
-	Format    string
+	Level  int
+	Format string
+
 	isStopped bool
 }
 
@@ -60,8 +61,13 @@ func (logger *LoggerType) Stop() {
 }
 
 func (logger *LoggerType) multi_log(level int, arg any) {
-	format := fmt.Sprintf("%s: [%s]", strings.ToUpper(GetLogLevelName(level)), "%v")
-	logger.multi_logF(level, format, arg)
+	var f string
+	if len(logger.Format) > 0 {
+		f = logger.Format
+	} else {
+		f = fmt.Sprintf("%s: [%s]", strings.ToUpper(GetLogLevelName(level)), "%v")
+	}
+	logger.multi_logF(level, f, arg)
 }
 
 func (logger *LoggerType) multi_logF(level int, format string, args ...interface{}) {
