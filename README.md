@@ -2,7 +2,7 @@
 
 [![Web site](https://img.shields.io/badge/Web_site-takecontrolsoft.eu-pink)](https://takecontrolsoft.eu/)
 [![Linked in](https://img.shields.io/badge/Linked_In-page-blue)](https://www.linkedin.com/company/take-control-si/)
-[![Docker Hub](https://img.shields.io/badge/Docker_Hub-repo-blue)](https://hub.docker.com/repository/docker/takecontrolorg/sync_server/general)
+![Docker Hub](https://img.shields.io/badge/docker-takecontrolorg-blue?style=flat&logo=docker&link=https%3A%2F%2Fhub.docker.com%2Frepository%2Fdocker%2Ftakecontrolorg%2Fsync_server%2Fgeneral)
 
 [![Project](https://img.shields.io/badge/Project-Sync_Device-darkred)](https://github.com/orgs/takecontrolsoft/projects/1)
 [![License](https://img.shields.io/badge/License-Apache-purple)](https://www.apache.org/licenses/LICENSE-2.0)
