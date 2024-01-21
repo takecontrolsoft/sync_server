@@ -53,8 +53,8 @@ var PortNumber int
 // Global variable for log directory path
 var LogPath string
 
-// Initialize the variables [UploadDirectory] and [PortNumber]
-// from the environment variables [UploadPathVariable] and [PortVariable].
+// Initialize the variables [UploadDirectory], [PortNumber] and [LogPath]
+// from the environment variables [UploadPathVariable], [PortVariable] and [LogPathVariable].
 func InitFromEnvVariables() {
 	d, envSet := os.LookupEnv(UploadPathVariable)
 	if !envSet {
