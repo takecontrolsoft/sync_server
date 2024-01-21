@@ -43,7 +43,7 @@ func main() {
 	flag.StringVar(&directory, "d", "", directoryHelp)
 
 	logPathHelp := `Path location for the log files. 
-	It not set, the log files will be stored to the executable file location.
+	If not set, the log files will be stored to the executable file location.
 	Absolute path is required in DOS or UNC format.
 	Make sure the server process has read/write access to this location.`
 	flag.StringVar(&logPath, "l", "", logPathHelp)
