@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
+	"github.com/takecontrolsoft/go_multi_log/logger/levels"
 )
 
 // The maximum stream size that is allowed to be uploaded to the server.
@@ -38,11 +39,16 @@ const UploadPathVariable string = "SYNC_STORAGE_PATH"
 // on witch the server can be reached.
 const PortVariable = "SYNC_SERVER_PORT"
 
-// The name of the environment variable with the path fo log files.
+// The name of the environment variable with the path for log files.
 // This value should point to the directory where the log files to be stored.
 // Absolute path is required in DOS or UNC format.
 // Make sure the server process has read/write access to this location.
 const LogPathVariable string = "LOG_PATH"
+
+// The name of the environment variable for the log level.
+// Allowed values are from 0 to 6.
+// See package "go_multi_log": https://pkg.go.dev/github.com/takecontrolsoft/go_multi_log/logger/levels#LogLevel
+const LogLevelVariable string = "LOG_LEVEL"
 
 // Global variable for storage directory path
 var UploadDirectory string
@@ -53,8 +59,11 @@ var PortNumber int
 // Global variable for log directory path
 var LogPath string
 
-// Initialize the variables [UploadDirectory], [PortNumber] and [LogPath]
-// from the environment variables [UploadPathVariable], [PortVariable] and [LogPathVariable].
+// Global variable for log level
+var LogLevel levels.LogLevel
+
+// Initialize the variables [UploadDirectory], [PortNumber], [LogPath] and [LogLevel]
+// from the environment variables [UploadPathVariable], [PortVariable], [LogPathVariable] and [LogLevelVariable].
 func InitFromEnvVariables() {
 	d, envSet := os.LookupEnv(UploadPathVariable)
 	if !envSet {
@@ -80,12 +89,23 @@ func InitFromEnvVariables() {
 	if !envSet {
 		l = ""
 	}
-
+	var n levels.LogLevel
+	ll, envSet := os.LookupEnv(LogLevelVariable)
+	if !envSet {
+		n = levels.Info
+	} else {
+		_, err := fmt.Sscan(ll, &n)
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}
 	UploadDirectory = d
 	PortNumber = p
 	LogPath = l
+	LogLevel = n
 	logger.InfoF("Server port: %d", PortNumber)
 	logger.InfoF(fmt.Sprintf("Storage path: %s", UploadDirectory))
 	logger.InfoF(fmt.Sprintf("Log path: %s", LogPath))
+	logger.InfoF(fmt.Sprintf("Log level: %s", LogLevel.String()))
 
 }
