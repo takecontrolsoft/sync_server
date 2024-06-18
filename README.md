@@ -7,7 +7,6 @@
 [![Project](https://img.shields.io/badge/Project-Sync_Device-darkred?style=flat&logo=github)](https://github.com/orgs/takecontrolsoft/projects/1)
 [![License](https://img.shields.io/badge/License-Apache-purple)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Main](https://github.com/takecontrolsoft/sync_server/actions/workflows/main.yml/badge.svg)](https://github.com/takecontrolsoft/sync_server/actions/workflows/main.yml)
-[![Pull Request](https://github.com/takecontrolsoft/sync_server/actions/workflows/pull_request.yml/badge.svg)](https://github.com/takecontrolsoft/sync_server/actions/workflows/pull_request.yml)
 
 [![Release](https://img.shields.io/github/v/release/takecontrolsoft/sync_server.svg?style=flat&logo=github)](https://github.com/takecontrolsoft/sync_server/releases/latest)
 
