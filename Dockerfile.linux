@@ -2,8 +2,26 @@ FROM ubuntu:latest
 WORKDIR /sync_server
 RUN mkdir sync_server
 COPY /bin/sync_server /sync_server/sync_server
-
+ENV LOG_LEVEL 3
 RUN chmod +x sync_server/sync_server
-RUN mkdir photos      
-CMD ["sync_server/sync_server", "-p", "3000", "-d", "/photos/"]
+RUN mkdir photos
+RUN mkdir logs
+WORKDIR /sync_server
+
+VOLUME /photos/
+VOLUME /logs/
+
+CMD ["sync_server/sync_server", "-p", "3000", "-d", "/photos/", "-l", "/logs/", "-n", '$LOG_LEVEL']
 EXPOSE 3000
+
+## To build an image named "tc" run:
+## docker build . -t tc -f Dockerfile.linux
+
+## To list docker images run:
+## docker images
+
+## To delete docker image "tc" run:
+## docker rmi tc:latest -f
+
+## To run docker image "tc" run:
+## docker run --name t1 -p 3000:3000 tc:latest -e "LOG_LEVEL=3" -v /photos:./bin /logs:./bin

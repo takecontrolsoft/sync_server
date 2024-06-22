@@ -18,7 +18,6 @@ package impl
 
 import (
 	"bufio"
-	"internal/errors_util"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -68,7 +67,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if written > maxSize {
 		os.Remove(f.Name())
-		utils.RenderMessage(w, FileSizeExceeded.Error(), http.StatusBadRequest)
+		utils.RenderError(w, FileSizeExceeded, http.StatusBadRequest)
 		return
 	}
 }
@@ -76,7 +75,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, error) {
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
 	if err != nil {
-		errors_util.LogError(err)
 		return nil, err
 	}
 
@@ -85,26 +83,22 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, error) 
 		MaxLength:   10,
 	})
 	if err != nil {
-		errors_util.LogError(err)
 		return nil, err
 	}
 	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{
 		Replacement: "0",
 	})
 	if err != nil {
-		errors_util.LogError(err)
 		return nil, err
 	}
 	dirName := filepath.Join(config.UploadDirectory, deviceId)
 	err = os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
-		errors_util.LogError(err)
 		return nil, err
 	}
 	filePath := filepath.Join(dirName, filename)
 	f, err := os.Create(filePath)
 	if err != nil {
-		errors_util.LogError(err)
 		return nil, err
 	}
 	return f, err
@@ -115,7 +109,6 @@ func validateFileType(b *bufio.Reader, w http.ResponseWriter) error {
 	fileType := http.DetectContentType(n)
 	if !utils.IsAllowedFileType(fileType, w) {
 		err := InvalidFileTypeUploaded(fileType)
-		errors_util.LogError(err)
 		return err
 	}
 	return nil
