@@ -1,17 +1,22 @@
 FROM ubuntu:latest
-WORKDIR /sync_server
 RUN mkdir sync_server
 COPY /bin/sync_server /sync_server/sync_server
-ENV LOG_LEVEL 3
+ENV LOG_LEVEL=3
 RUN chmod +x sync_server/sync_server
-RUN mkdir photos
-RUN mkdir logs
+
 WORKDIR /sync_server
+RUN mkdir sync_server_data
+RUN chmod 775 /sync_server/sync_server_data
+RUN chmod g+s /sync_server/sync_server_data
+RUN mkdir sync_server_data/photos
+RUN mkdir sync_server_data/logs
+RUN addgroup --gid 1024 mygroup
+RUN adduser --disabled-password --gecos "" --force-badname --ingroup 1024 myuser 
+USER myuser
+VOLUME sync_server/sync_server_data
 
-VOLUME /photos/
-VOLUME /logs/
-
-CMD ["sync_server/sync_server", "-p", "3000", "-d", "/photos/", "-l", "/logs/", "-n", '$LOG_LEVEL']
+WORKDIR /
+CMD ["sh", "-c", "sync_server/sync_server -p 3000 -d /sync_server/sync_server_data/photos/ -l /sync_server/sync_server_data/logs/ -n $LOG_LEVEL"]
 EXPOSE 3000
 
 ## To build an image named "tc" run:

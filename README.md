@@ -16,3 +16,22 @@
 
 # sync server
 Golang server for uploading files and media files processing workflows.
+
+go get github.com/takecontrolsoft/go_multi_log@v1.0.1
+
+go build -v ./...
+
+go build -o bin
+
+bin/sync_server.exe /help
+
+bin/sync_server.exe -p 3000 -d C:\Users\desis\Pictures\FileSyncTest\ -l C:\Users\desis\Pictures\FileSyncTest\ -n 5
+http://localhost:3000/files
+
+
+bin/sync_server.exe -p 3000 -d /photos/ -l /log/ -n 5
+
+ godoc -http=:8081 -index
+ http://localhost:8081/pkg/
+
+
