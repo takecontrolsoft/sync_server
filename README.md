@@ -23,11 +23,9 @@ Golang server for uploading files and media files processing workflows.
 `go get github.com/takecontrolsoft/go_multi_log@v1.0.1`
 
 ## Build go server
-`go build -v ./...`
+* to local folder - `go build -v ./...`
 
-or
-
-`go build -o bin`
+* to bin folder `go build -o bin/`
 
 # How to run sync server
 ## Open sync server help
@@ -52,7 +50,7 @@ http://localhost:3000/files
 
 # Docker image
 ## To build an image named "tc" run:
-`docker build . -t tc -f Dockerfile.linux`
+`docker build . -t tc -f Dockerfile.linux --platform linux/amd64`
 
 ## To list docker images run:
 `docker images`
