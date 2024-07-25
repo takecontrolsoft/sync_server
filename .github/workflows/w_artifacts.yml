@@ -1,0 +1,72 @@
+name: Workflow Artifacts
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: Operation system to build artifact for.
+        required: true
+        type: string 
+      architectures:
+        description: Architectures to build artifact for.
+        required: true
+        type: string   
+      go_version:
+        description: Go version to be used for the build.
+        required: true
+        type: string 
+      release:
+        description: Number of released version. Not required.
+        required: false
+        type: string    
+      release_url: 
+        description: Release url to upload assets.
+        required: false
+        type: string   
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.os) }}
+        architecture: ${{ fromJSON(inputs.architectures) }}
+    steps:
+      - uses: actions/checkout@v3
+   
+      - name: Build Cross-Platform
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: ${{ inputs.go_version }}
+          dest: build
+          prefix: sync_server${{ inputs.release }}
+          targets: ${{ matrix.os != 'macos' && matrix.os || 'darwin'}}/${{ matrix.architecture }}
+          v: true
+          x: false
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true 
+
+      - name: Rename files
+        if: ${{ matrix.os == 'macos' }}
+        working-directory: build/
+        run: |  
+           mv sync_server${{ inputs.release }}-darwin-${{ matrix.architecture }} sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
+
+      - name: Upload SyncServer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
+          path: build
+                  
+      - name: Upload Release Asset
+        if: ${{ inputs.release_url != '' }}
+        uses: glentiki/xbin-release-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:
+          upload_url: ${{ inputs.release_url }}
+          assets_path: ./build

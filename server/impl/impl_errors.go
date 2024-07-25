@@ -23,12 +23,12 @@ import (
 )
 
 // An error for invalid file type, which is not allowed to be uploaded.
-func InvalidFileTypeUploaded(fileType string) *errors.Error {
-	return errors.Errorf("File type '%s' is not allowed to be uploaded.", fileType)
+func InvalidFileTypeUploaded(fileType string) error {
+	return errors.Errorf("File type '%s' is not allowed to be uploaded.", fileType).Err
 }
 
 // An error for empty storage path.
-var FileSizeExceeded = errors.Errorf("Maximum file size for uploaded files exceeded.")
+var FileSizeExceeded = errors.Errorf("Maximum file size for uploaded files exceeded.").Err
 
 type RequestError struct {
 	StatusCode int

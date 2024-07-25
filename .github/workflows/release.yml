@@ -1,4 +1,4 @@
-name: Release Draft Sync Server
+name: Release
 # This workflow is triggered when a new tag is published
 # `git tag v0.0.1alpha`
 # `git push --tags`
@@ -14,29 +14,30 @@ env:
   SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
 
 jobs:
-    Release:
+    build_and_tests:
+      name: Test sync
+      secrets: inherit
+      with:
+        go_version: ${{ vars.GO_VERSION }}
+      uses: ./.github/workflows/w_tests.yml
+
+    release:
       if: contains(github.ref, 'tags/v')
       runs-on: ubuntu-latest
+      needs: build_and_tests
       outputs: 
         upload_url: ${{ steps.create_release.outputs.upload_url }}
+        v_num:  ${{ steps.version.outputs.number }}
     
       steps:
         - uses: actions/checkout@v3
-
-        - name: Set up Go
-          uses: actions/setup-go@v4
-          with:
-            go-version: '1.20'
-
-        - name: Build
-          run: go build -v ./...
-
-        - name: Test
-          run: go test -v ./...
-
-        - name: Set environments
-          run: env GOOS=linux GOARCH=amd64 
-        
+        - name: Get version number
+          id: version
+          run: |
+            echo "number=$(echo '${{ github.ref }}' | cut -d '/' -f 3)" >>${GITHUB_OUTPUT}
+        - name: Show version number
+          run: |
+            echo ${{ steps.version.outputs.number }}
         - name: Create Release
           id: create_release
           uses: actions/create-release@v1
@@ -45,29 +46,31 @@ jobs:
           with:
             tag_name: ${{ github.ref }}
             release_name: ${{ github.ref }}
-            draft: true
-            prerelease: false
-
-        - name: Build Cross-Platform
-          uses: crazy-max/ghaction-xgo@v3
-          with:
-            xgo_version: latest
-            go_version: 1.21
-            dest: build
-            prefix: sync_server-${{ github.ref_name }}
-            targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
-            v: true
-            x: false
-            race: false
-            ldflags: -s -w
-            buildmode: default
-            trimpath: true      
-               
-        - name: Upload Linux Asset
-          uses: glentiki/xbin-release-action@v1.0.0
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            assets_path: ./build
+            body_path: CHANGELOG.md
+            draft: false
+            prerelease: true   
         
+    build-artifacts:
+      name: Artifacts
+      needs: release
+      uses: ./.github/workflows/w_artifacts.yml
+      secrets: inherit
+      with:
+        os: '["linux", "windows", "macos"]'
+        architectures: '["amd64","arm64"]'
+        go_version: ${{ vars.GO_VERSION }}
+        release: -${{ needs.release.outputs.v_num }}
+        release_url: ${{ needs.release.outputs.upload_url }}
+
+    build-docker-images:
+      name: Docker image
+      needs: 
+        - release
+        - build-artifacts
+      secrets: inherit
+      with:
+        os: '["linux"]'
+        architectures: '["amd64", "arm64"]' 
+        release: -${{ needs.release.outputs.v_num }}
+      uses: ./.github/workflows/w_docker.yml
+            

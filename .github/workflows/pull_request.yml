@@ -1,0 +1,45 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.head_ref || (github.workflow && github.run_id) }}
+  cancel-in-progress: true
+  
+env:
+  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+
+jobs:
+  build_and_tests:
+    name: Test sync
+    secrets: inherit
+    with:
+      go_version: ${{ vars.GO_VERSION }}
+    uses: ./.github/workflows/w_tests.yml
+
+  # Uncomment only if a docker image has to be built in a pull request
+
+  build-artifacts:
+    name: Artifacts
+    needs: build_and_tests
+    uses: ./.github/workflows/w_artifacts.yml
+    secrets: inherit
+    with:
+      os: '["linux"]'
+      architectures: '["amd64"]'
+      go_version: ${{ vars.GO_VERSION }}
+  
+  build-docker-images:
+    name: Docker image
+    needs: build-artifacts
+    secrets: inherit
+    with:
+      os: '["linux"]'
+      architectures: '["amd64"]' 
+    uses: ./.github/workflows/w_docker.yml
+
+  
+
