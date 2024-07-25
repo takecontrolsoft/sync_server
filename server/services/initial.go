@@ -15,11 +15,9 @@ limitations under the License.
 
 package services
 
-import (
-	"fmt"
-)
+import "github.com/takecontrolsoft/go_multi_log/logger"
 
 // This method allows package 'service' to be imported.
 func Load() {
-	fmt.Println("Importing Sync server web services ...")
+	logger.Info("Importing Sync server web services ...")
 }

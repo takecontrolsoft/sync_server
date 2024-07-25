@@ -1,9 +1,16 @@
 FROM ubuntu:latest
-WORKDIR /sync_server
 RUN mkdir sync_server
 COPY /bin/sync_server /sync_server/sync_server
-
+ENV LOG_LEVEL=3
 RUN chmod +x sync_server/sync_server
-RUN mkdir photos      
-CMD ["sync_server/sync_server", "-p", "3000", "-d", "/photos/"]
+
+WORKDIR /sync_server
+RUN mkdir data
+RUN chmod 775 data
+RUN chmod g+s data
+RUN mkdir data/photos
+RUN mkdir data/logs
+VOLUME data
+WORKDIR /
+CMD ["sh", "-c", "sync_server/sync_server -p 3000 -d 'sync_server/data/photos' -l 'sync_server/data/logs' -n ${LOG_LEVEL}"]
 EXPOSE 3000
