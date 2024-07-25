@@ -17,8 +17,16 @@ limitations under the License.
 package impl
 
 import (
+	"html/template"
 	"net/http"
 )
 
 func SetupInfoHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		t, err := template.ParseFiles("server/templates/setup_info.gtpl")
+		if err == nil {
+			t.Execute(w, nil)
+		}
+		return
+	}
 }
