@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/flytam/filenamify"
 	"github.com/takecontrolsoft/sync_server/server/config"
@@ -57,8 +58,18 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, MissingUser, http.StatusBadRequest)
 		return
 	}
+	dateClassifier := r.Header.Get("date")
+	if len(dateClassifier) == 0 {
+		utils.RenderError(w, MissingDateClassifier, http.StatusBadRequest)
+		return
+	}
+	dateArray := strings.Split(dateClassifier, "-")
+	if len(dateArray) < 3 {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
 
-	f, err := createNewFile(mp, w, userName)
+	f, err := createNewFile(mp, w, userName, dateClassifier)
 	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
@@ -77,7 +88,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string) (*os.File, error) {
+func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string, dateClassifier string) (*os.File, error) {
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
 	if err != nil {
 		return nil, err
@@ -85,7 +96,7 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string) (
 
 	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{
 		Replacement: "0",
-		MaxLength:   10,
+		MaxLength:   20,
 	})
 	if err != nil {
 		return nil, err
@@ -96,7 +107,8 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string) (
 	if err != nil {
 		return nil, err
 	}
-	dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+	dateArray := strings.Split(dateClassifier, "-")
+	dirName := filepath.Join(config.UploadDirectory, userName, deviceId, dateArray[0], dateArray[1], dateArray[2])
 	err = os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		return nil, err

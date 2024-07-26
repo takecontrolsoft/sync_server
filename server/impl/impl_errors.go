@@ -33,6 +33,12 @@ var FileSizeExceeded = errors.Errorf("Maximum file size for uploaded files excee
 // An error for missing authorized user.
 var MissingUser = errors.Errorf("The user is not authorized.").Err
 
+// An error for missing date classifier.
+var MissingDateClassifier = errors.Errorf("Missing date classifier.").Err
+
+// An error for wrong date classifier.
+var WrongDateClassifier = errors.Errorf("Wrong date classifier.").Err
+
 type RequestError struct {
 	StatusCode int
 
