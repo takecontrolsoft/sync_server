@@ -52,8 +52,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if utils.RenderIfError(err, w, http.StatusBadRequest) {
 		return
 	}
+	userName := r.Header.Get("user")
+	if len(userName) == 0 {
+		utils.RenderError(w, MissingUser, http.StatusBadRequest)
+		return
+	}
 
-	f, err := createNewFile(mp, w)
+	f, err := createNewFile(mp, w, userName)
 	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
@@ -72,7 +77,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, error) {
+func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string) (*os.File, error) {
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
 	if err != nil {
 		return nil, err
@@ -91,7 +96,7 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter) (*os.File, error) 
 	if err != nil {
 		return nil, err
 	}
-	dirName := filepath.Join(config.UploadDirectory, deviceId)
+	dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	err = os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		return nil, err

@@ -34,7 +34,7 @@ func (s FilesManagementService) Host() bool {
 	http.HandleFunc("/upload", impl.UploadHandler)
 
 	fs := http.FileServer(http.Dir(config.UploadDirectory))
-	http.Handle("/files", http.StripPrefix("/files", fs))
+	http.Handle("/", http.StripPrefix("/", fs))
 
 	return true
 }

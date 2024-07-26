@@ -30,6 +30,9 @@ func InvalidFileTypeUploaded(fileType string) error {
 // An error for empty storage path.
 var FileSizeExceeded = errors.Errorf("Maximum file size for uploaded files exceeded.").Err
 
+// An error for missing authorized user.
+var MissingUser = errors.Errorf("The user is not authorized.").Err
+
 type RequestError struct {
 	StatusCode int
 
