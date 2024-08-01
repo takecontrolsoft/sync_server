@@ -1,10 +1,10 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
-## 1.0.0 Release notes (2024-07-27)
+## 1.0.0 Release notes (2024-08-01)
 
 ### Enhancements
-* Store files by date and user name.
-
+* Store files in folders by username, deviceId and date of the files.
+* Improve logging. Log to a file.
 
 ## 0.0.1-alpha Release notes (2024-01-09)
 

@@ -43,3 +43,6 @@ http://localhost:3000/files
 ## To run docker image "tc" run:
 `docker run --name t1 -p 3000:3000 tc:latest -e "LOG_LEVEL=3" -v /photos:./bin /logs:./bin`
 
+## How to release
+`git tag v1.0.0`      
+`git push --tags`   
