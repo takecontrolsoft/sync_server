@@ -1,5 +1,11 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+
+## 1.0.1 Release notes (2024-08-02)
+
+### Enhancements
+* Files stored in monthly folders.
+
 ## 1.0.0 Release notes (2024-08-01)
 
 ### Enhancements
