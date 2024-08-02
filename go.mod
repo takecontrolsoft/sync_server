@@ -11,4 +11,7 @@ require (
 	github.com/takecontrolsoft/go_multi_log/logger/levels v0.0.0-20240115234328-80028a510071 // indirect
 	github.com/takecontrolsoft/go_multi_log/logger/loggers v0.0.0-20240115234328-80028a510071 // indirect
 	github.com/timandy/routine v1.1.3 // indirect
+	github.com/yuin/goldmark v1.4.13 // indirect
+	golang.org/x/mod v0.19.0 // indirect
+	golang.org/x/tools v0.23.0 // indirect
 )

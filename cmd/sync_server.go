@@ -35,11 +35,11 @@ func main() {
 	var logPath string
 	var logLevel int
 
-	portHelp := `TCP port number on witch the sync server can be reached. Defaults to 80.`
+	portHelp := `TCP port number on witch the sync server can be reached. Defaults to 8080.`
 	flag.IntVar(&port, "p", 8080, portHelp)
 
 	directoryHelp := `Storage path location for the synced files. It is required.
-	This value should point to the directory where the uploaded files to be stored.
+	This value should point to the root directory where the uploaded files to be stored.
 	Absolute path is required in DOS or UNC format.
 	Make sure the server process has read/write access to this location.`
 	flag.StringVar(&directory, "d", "", directoryHelp)

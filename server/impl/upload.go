@@ -64,7 +64,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dateArray := strings.Split(dateClassifier, "-")
-	if len(dateArray) < 3 {
+	if len(dateArray) < 2 {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
 		return
 	}
@@ -108,7 +108,7 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string, d
 		return nil, err
 	}
 	dateArray := strings.Split(dateClassifier, "-")
-	dirName := filepath.Join(config.UploadDirectory, userName, deviceId, dateArray[0], dateArray[1], dateArray[2])
+	dirName := filepath.Join(config.UploadDirectory, userName, deviceId, dateArray[0], dateArray[1])
 	err = os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		return nil, err
