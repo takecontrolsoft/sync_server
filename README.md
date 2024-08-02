@@ -2,7 +2,7 @@
 
 [![Web site](https://img.shields.io/badge/Web_site-takecontrolsoft.eu-pink)](https://takecontrolsoft.eu/)
 [![Linked in](https://img.shields.io/badge/Linked_In-takecontrolsoft-blue?style=flat&logo=linkedin)](https://www.linkedin.com/company/take-control-si/)
-[![Documentation](https://pkg.go.dev/badge/github.com/takecontrolsoft/sync_server.svg)](https://pkg.go.dev/github.com/takecontrolsoft/sync_server)
+[![Go Doc](https://pkg.go.dev/badge/github.com/takecontrolsoft/sync_server.svg)](https://pkg.go.dev/github.com/takecontrolsoft/sync_server)
 [![Docker Hub](https://img.shields.io/badge/Docker_Hub-takecontrolorg-blue?style=flat&logo=docker)](https://hub.docker.com/r/takecontrolorg/sync_server)
 
 [![Project](https://img.shields.io/badge/Project-Sync_Device-darkred?style=flat&logo=github)](https://github.com/orgs/takecontrolsoft/projects/1)
