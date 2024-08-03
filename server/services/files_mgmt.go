@@ -31,10 +31,15 @@ type FilesManagementService struct {
 
 func (s FilesManagementService) Host() bool {
 	logger.Info("FilesManagementService hosted")
+
 	http.HandleFunc("/upload", impl.UploadHandler)
 
 	fs := http.FileServer(http.Dir(config.UploadDirectory))
 	http.Handle("/", http.StripPrefix("/", fs))
+
+	http.HandleFunc("/folders", impl.GetFoldersHandler)
+
+	http.HandleFunc("/files", impl.GetFilesHandler)
 
 	return true
 }
