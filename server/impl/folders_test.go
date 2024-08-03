@@ -22,12 +22,12 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
-	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
 func init() {
@@ -36,7 +36,7 @@ func init() {
 
 func TestGetFolders(t *testing.T) {
 	userName := "Desi"
-	deviceId := utils.GenerateRandomString(5)
+	deviceId := "Mac15,6AFA33F68-3E48"
 	body, err := postForm(userName, deviceId)
 	if err != nil {
 		t.Fatal(err)
@@ -51,11 +51,6 @@ func jsonReaderFactory(in interface{}) (io.Reader, error) {
 		return nil, fmt.Errorf("creating reader: error encoding data: %s", err)
 	}
 	return buf, nil
-}
-
-type data struct {
-	User     string
-	DeviceId string
 }
 
 func postForm(userName string, deviceId string) (string, error) {
@@ -82,7 +77,7 @@ func postForm(userName string, deviceId string) (string, error) {
 			logger.Error(err)
 			return "", err
 		}
-		return result[0], nil
+		return strings.Join(result, ","), nil
 	} else {
 		return "", &RequestError{
 			StatusCode: rr.Code,

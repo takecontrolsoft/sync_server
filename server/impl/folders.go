@@ -17,15 +17,45 @@ package impl
 
 import (
 	"encoding/json"
+	"io/fs"
 	"net/http"
+	"path/filepath"
+	"strings"
 
+	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
+type data struct {
+	User     string
+	DeviceId string
+}
+
 func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		folders := []string{"2024-7,2014-1"}
+		var folders []string
+		var result data
+		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+			utils.RenderError(w, err, http.StatusBadRequest)
+			return
+		}
+		userName := result.User
+		deviceId := result.DeviceId
+		dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 
+		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
+
+			if d.IsDir() && deviceId != d.Name() {
+				folders = append(
+					folders,
+					strings.Replace(path+"/", dirName, "", 1),
+				)
+			}
+			return err
+		})
+		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+			return
+		}
 		jData, err := json.Marshal(folders)
 		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 			return
