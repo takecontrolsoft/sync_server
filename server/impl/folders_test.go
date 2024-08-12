@@ -22,7 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
+	"reflect"
 	"testing"
 
 	"github.com/go-errors/errors"
@@ -41,7 +41,17 @@ func TestGetFolders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	print(body)
+	typeMatch := reflect.TypeOf(body) == reflect.TypeOf([]folder{})
+	if !typeMatch {
+		t.Fatal(errors.Errorf("Return type does not match expected type 'folder'"))
+	}
+	for i := range body {
+		f := body[i]
+		fmt.Println(f.Year)
+		for k := range f.Months {
+			fmt.Println(f.Months[k])
+		}
+	}
 }
 func jsonReaderFactory(in interface{}) (io.Reader, error) {
 	buf := bytes.NewBuffer(nil)
@@ -53,17 +63,17 @@ func jsonReaderFactory(in interface{}) (io.Reader, error) {
 	return buf, nil
 }
 
-func postForm(userName string, deviceId string) (string, error) {
+func postForm(userName string, deviceId string) ([]folder, error) {
 	body := data{User: userName, DeviceId: deviceId}
 	r, err := jsonReaderFactory(body)
 	if err != nil {
 		logger.Error(err)
-		return "", err
+		return nil, err
 	}
 	req, err := http.NewRequest("POST", "/folders", r)
 	if err != nil {
 		logger.Error(err)
-		return "", err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -72,14 +82,14 @@ func postForm(userName string, deviceId string) (string, error) {
 	handler.ServeHTTP(rr, req)
 
 	if rr.Code == http.StatusOK {
-		result := []string{}
+		result := []folder{}
 		if err := json.NewDecoder(rr.Body).Decode(&result); err != nil {
 			logger.Error(err)
-			return "", err
+			return nil, err
 		}
-		return strings.Join(result, ","), nil
+		return result, nil
 	} else {
-		return "", &RequestError{
+		return nil, &RequestError{
 			StatusCode: rr.Code,
 			Err:        errors.New(rr.Body),
 		}

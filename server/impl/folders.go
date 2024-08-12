@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
@@ -31,12 +32,17 @@ type data struct {
 	DeviceId string
 }
 
+type folder struct {
+	Year   string
+	Months []string
+}
+
 func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		var folders []string
+		var folders []folder
 		var result data
 		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
-			utils.RenderError(w, err, http.StatusBadRequest)
+			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
 			return
 		}
 		userName := result.User
@@ -45,25 +51,33 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
 
-			if d.IsDir() && deviceId != d.Name() {
-				folders = append(
-					folders,
-					strings.Replace(path+"/", dirName, "", 1),
-				)
+			if d != nil && d.IsDir() && deviceId != d.Name() {
+				fld := strings.TrimRight(strings.Replace(path+"/", dirName+"/", "", 1), "/")
+				if len(fld) == 4 {
+					folders = append(folders, folder{Year: fld, Months: []string{}})
+				} else {
+					yr := fld[0:4]
+					for i := range folders {
+						foundYear := folders[i]
+						if foundYear.Year == yr {
+							mnts := foundYear.Months
+							mnts = append(mnts, fld)
+							folders[i].Months = mnts
+						}
+					}
+				}
 			}
 			return err
 		})
-		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-			return
-		}
-		jData, err := json.Marshal(folders)
-		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-			return
-		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-
-		w.Write(jData)
-
+		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+			return
+		}
+		if err := json.NewEncoder(w).Encode(folders); err != nil {
+			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+				return
+			}
+		}
 	}
 }

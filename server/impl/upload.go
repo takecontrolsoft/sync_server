@@ -95,7 +95,6 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string, d
 
 	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{
 		Replacement: "0",
-		MaxLength:   20,
 	})
 	if err != nil {
 		return nil, err
