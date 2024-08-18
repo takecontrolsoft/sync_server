@@ -27,7 +27,7 @@ import (
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
-type data struct {
+type userData struct {
 	User     string
 	DeviceId string
 }
@@ -40,7 +40,7 @@ type folder struct {
 func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var folders []folder
-		var result data
+		var result userData
 		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
 			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
 			return

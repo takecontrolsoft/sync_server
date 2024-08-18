@@ -1,11 +1,15 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/go_multi_log/logger"
 )
 
@@ -43,4 +47,14 @@ func GenerateRandomString(length int) string {
 		result[i] = charset[random.Intn(len(charset))]
 	}
 	return string(result)
+}
+
+func JsonReaderFactory(in interface{}) (io.Reader, error) {
+	buf := bytes.NewBuffer(nil)
+	enc := json.NewEncoder(buf)
+	err := enc.Encode(in)
+	if err != nil {
+		return nil, errors.Errorf("creating reader: error encoding data: %s", err)
+	}
+	return buf, nil
 }

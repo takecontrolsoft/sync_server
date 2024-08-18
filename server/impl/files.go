@@ -1,4 +1,4 @@
-/* Copyright 2023 Take Control - Software & Infrastructure
+/* Copyright 2024 Take Control - Software & Infrastructure
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,12 +16,50 @@ limitations under the License.
 package impl
 
 import (
+	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/go-errors/errors"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
+type folderData struct {
+	UserData userData
+	Folder   string
+}
+
 func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		w.Write([]byte("System info will be provided in next versions"))
-		return
+	if r.Method == "POST" {
+		var files = make([]string, 0)
+		var result folderData
+		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
+			return
+		}
+		userName := result.UserData.User
+		deviceId := result.UserData.DeviceId
+		folder := result.Folder
+		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+		dirName := filepath.Join(userDirName, folder)
+		entries, err := os.ReadDir(dirName)
+		if err == nil {
+			for _, entry := range entries {
+				if !entry.IsDir() {
+					file := filepath.Join(folder, entry.Name())
+					files = append(files, file)
+				}
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(files); err != nil {
+			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+				return
+			}
+		}
 	}
 }
