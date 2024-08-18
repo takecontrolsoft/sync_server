@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -50,9 +51,11 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		userName := result.User
 		deviceId := result.DeviceId
 		dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+		separator := string(os.PathSeparator)
 		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
 			if d != nil && d.IsDir() && deviceId != d.Name() {
-				fld := strings.TrimLeft(strings.Replace(strings.TrimRight(path, "/"), dirName, "", 1), "/")
+				fld := strings.Replace(strings.TrimRight(path, separator), dirName, "", 1)
+				fld = strings.TrimLeft(fld, separator)
 				logger.InfoF("File path %s", path)
 				logger.InfoF("File path ends with %s", fld)
 				if len(fld) == 4 {
