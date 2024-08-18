@@ -39,7 +39,8 @@ type folder struct {
 
 func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		var folders []folder
+		var folders = make([]folder, 0)
+
 		var result userData
 		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
 			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
@@ -71,9 +72,7 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-			return
-		}
+
 		if err := json.NewEncoder(w).Encode(folders); err != nil {
 			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 				return
