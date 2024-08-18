@@ -50,7 +50,7 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		deviceId := result.DeviceId
 		dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 
-		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
+		filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
 
 			if d != nil && d.IsDir() && deviceId != d.Name() {
 				fld := strings.TrimRight(strings.Replace(path+"/", dirName+"/", "", 1), "/")
