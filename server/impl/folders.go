@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -49,27 +50,31 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		userName := result.User
 		deviceId := result.DeviceId
 		dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+		if _, err := os.Stat(dirName); !os.IsExist(err) {
+			err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
 
-		filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
-
-			if d != nil && d.IsDir() && deviceId != d.Name() {
-				fld := strings.TrimRight(strings.Replace(path+"/", dirName+"/", "", 1), "/")
-				if len(fld) == 4 {
-					folders = append(folders, folder{Year: fld, Months: []string{}})
-				} else {
-					yr := fld[0:4]
-					for i := range folders {
-						foundYear := folders[i]
-						if foundYear.Year == yr {
-							mnts := foundYear.Months
-							mnts = append(mnts, fld)
-							folders[i].Months = mnts
+				if d != nil && d.IsDir() && deviceId != d.Name() {
+					fld := strings.TrimRight(strings.Replace(path+"/", dirName+"/", "", 1), "/")
+					if len(fld) == 4 {
+						folders = append(folders, folder{Year: fld, Months: []string{}})
+					} else {
+						yr := fld[0:4]
+						for i := range folders {
+							foundYear := folders[i]
+							if foundYear.Year == yr {
+								mnts := foundYear.Months
+								mnts = append(mnts, fld)
+								folders[i].Months = mnts
+							}
 						}
 					}
 				}
+				return err
+			})
+			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+				return
 			}
-			return err
-		})
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
