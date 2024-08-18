@@ -52,7 +52,9 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
 			if d != nil && d.IsDir() && deviceId != d.Name() {
-				fld := strings.TrimRight(strings.Replace(path+"/", dirName+"/", "", 1), "/")
+				fld := strings.TrimLeft(strings.Replace(strings.TrimRight(path, "/"), dirName, "", 1), "/")
+				logger.InfoF("File path %s", path)
+				logger.InfoF("File path ends with %s", fld)
 				if len(fld) == 4 {
 					folders = append(folders, folder{Year: fld, Months: []string{}})
 				} else {
