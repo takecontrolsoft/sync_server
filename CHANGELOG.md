@@ -1,5 +1,10 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+## 1.0.2 Release notes (2024-08-18)
+
+### Enhancements
+* Implemented API `/folders` that returns all the folders in a tree for the device and user.
+* Implemented API `/files` that returns all the files under a specific folder for the device and user.
 
 ## 1.0.1 Release notes (2024-08-02)
 
