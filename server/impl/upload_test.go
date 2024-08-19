@@ -78,8 +78,9 @@ func postUpload(field string, name string, t *testing.T) error {
 		logger.Error(err)
 		return err
 	}
+
 	req.Header.Set("Content-Type", m.FormDataContentType())
-	req.Header.Set("user", "test")
+	req.Header.Set("user", "[68]")
 	req.Header.Set("date", "2024-5-3")
 
 	rr := httptest.NewRecorder()
