@@ -36,7 +36,7 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		var files = make([]string, 0)
 		var result folderData
 		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
-			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
+			utils.RenderError(w, errors.Errorf("$Required json input {UserData: { User: '', DeviceId: ''}, Folder: ''}"), http.StatusBadRequest)
 			return
 		}
 		userName := result.UserData.User
@@ -61,5 +61,27 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	}
+}
+
+func DeleteAllHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		var result userData
+		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
+			return
+		}
+		userName := result.User
+		deviceId := result.DeviceId
+		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+
+		err := os.RemoveAll(userDirName)
+		if err != nil {
+			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+				return
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 	}
 }

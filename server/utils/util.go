@@ -3,9 +3,17 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"image"
+	"image/color"
+
+	"image/draw"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -57,4 +65,67 @@ func JsonReaderFactory(in interface{}) (io.Reader, error) {
 		return nil, errors.Errorf("creating reader: error encoding data: %s", err)
 	}
 	return buf, nil
+}
+
+func ResizeImage(img image.RGBA, height int) image.RGBA {
+	if height < 50 {
+		return img
+	}
+	bounds := img.Bounds()
+	imgHeight := bounds.Dy()
+	if height >= imgHeight {
+		return img
+	}
+	imgWidth := bounds.Dx()
+	resizeFactor := float32(imgHeight) / float32(height)
+	ratio := float32(imgWidth) / float32(imgHeight)
+	width := int(float32(height) * ratio)
+	resizedImage := image.NewRGBA(image.Rect(0, 0, width, height))
+	var imgX, imgY int
+	var imgColor color.Color
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			imgX = int(resizeFactor*float32(x) + 0.5)
+			imgY = int(resizeFactor*float32(y) + 0.5)
+			imgColor = img.At(imgX, imgY)
+			resizedImage.Set(x, y, imgColor)
+		}
+	}
+	return *resizedImage
+}
+
+func ImageToRGBA(src image.Image) *image.RGBA {
+
+	// No conversion needed if image is an *image.RGBA.
+	if dst, ok := src.(*image.RGBA); ok {
+		return dst
+	}
+
+	// Use the image/draw package to convert to *image.RGBA.
+	b := src.Bounds()
+	dst := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(dst, dst.Bounds(), src, b.Min, draw.Src)
+	return dst
+}
+
+func GetImageFromFilePath(filePath string) (image.Image, error) {
+	reader, err := os.Open(filePath)
+	if err != nil {
+		logger.Error(err)
+	}
+
+	config, info, err := image.DecodeConfig(reader)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	print(config.Height)
+	print(info)
+	m, _, err := image.Decode(reader)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return m, err
 }

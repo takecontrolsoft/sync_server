@@ -17,6 +17,7 @@ package impl
 
 import (
 	"bufio"
+	"encoding/json"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -52,7 +53,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if utils.RenderIfError(err, w, http.StatusBadRequest) {
 		return
 	}
-	userName := r.Header.Get("user")
+	userNameEncoded := r.Header.Get("user")
+	var name []byte
+	if err := json.Unmarshal([]byte(userNameEncoded), &name); err != nil {
+		utils.RenderError(w, err, http.StatusInternalServerError)
+		return
+	}
+	userName := string(name)
 	if len(userName) == 0 {
 		utils.RenderError(w, MissingUser, http.StatusBadRequest)
 		return

@@ -41,6 +41,8 @@ func (s FilesManagementService) Host() bool {
 
 	http.HandleFunc("/files", impl.GetFilesHandler)
 
+	http.HandleFunc("/delete-all", impl.DeleteAllHandler)
+
 	return true
 }
 
