@@ -54,6 +54,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userNameEncoded := r.Header.Get("user")
+
 	var name []byte
 	if err := json.Unmarshal([]byte(userNameEncoded), &name); err != nil {
 		utils.RenderError(w, err, http.StatusInternalServerError)

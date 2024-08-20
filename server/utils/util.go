@@ -67,7 +67,7 @@ func JsonReaderFactory(in interface{}) (io.Reader, error) {
 	return buf, nil
 }
 
-func ResizeImage(img image.RGBA, height int) image.RGBA {
+func ResizeImage(img *image.RGBA, height int) *image.RGBA {
 	if height < 50 {
 		return img
 	}
@@ -91,17 +91,15 @@ func ResizeImage(img image.RGBA, height int) image.RGBA {
 			resizedImage.Set(x, y, imgColor)
 		}
 	}
-	return *resizedImage
+	return resizedImage
 }
 
 func ImageToRGBA(src image.Image) *image.RGBA {
 
-	// No conversion needed if image is an *image.RGBA.
 	if dst, ok := src.(*image.RGBA); ok {
 		return dst
 	}
 
-	// Use the image/draw package to convert to *image.RGBA.
 	b := src.Bounds()
 	dst := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
 	draw.Draw(dst, dst.Bounds(), src, b.Min, draw.Src)
@@ -114,13 +112,8 @@ func GetImageFromFilePath(filePath string) (image.Image, error) {
 		logger.Error(err)
 	}
 
-	config, info, err := image.DecodeConfig(reader)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-	print(config.Height)
-	print(info)
+	reader.Seek(0, 0)
+
 	m, _, err := image.Decode(reader)
 	if err != nil {
 		logger.Error(err)

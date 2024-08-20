@@ -77,9 +77,8 @@ func DeleteAllHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := os.RemoveAll(userDirName)
 		if err != nil {
-			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
-				return
-			}
+			utils.RenderError(w, err, http.StatusInternalServerError)
+			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

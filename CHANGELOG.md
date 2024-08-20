@@ -1,5 +1,12 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+## 1.0.3 Release notes (2024-08-20)
+
+### Enhancements
+* Implemented API `/img` that returns thumbnails streams.
+* Implemented API `/delete-all` that deletes all the files for the device and user from the server.
+
+
 ## 1.0.2 Release notes (2024-08-18)
 
 ### Enhancements

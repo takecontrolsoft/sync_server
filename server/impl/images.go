@@ -17,9 +17,9 @@ package impl
 
 import (
 	"encoding/json"
-	"image"
 	"image/png"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/go-errors/errors"
@@ -34,7 +34,6 @@ type fileData struct {
 
 func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		var files = make([]string, 0)
 		var result fileData
 		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
 			utils.RenderError(w, errors.Errorf("$Required json input {UserData: { User: '', DeviceId: ''}, 	File: ''}"), http.StatusBadRequest)
@@ -44,25 +43,52 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		deviceId := result.UserData.DeviceId
 		file := result.File
 		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-		filePath := filepath.Join(userDirName, file)
-		src, err := utils.GetImageFromFilePath(filePath)
-		if err != nil {
-			utils.RenderError(w, err, http.StatusBadRequest)
-			return
-		}
-		// Set the expected size that you want:
-		dst := image.NewRGBA(image.Rect(0, 0, src.Bounds().Max.X/2, src.Bounds().Max.Y/2))
-
-		// Encode to `output`:
-		png.Encode(w, dst)
-
-		w.Header().Set("Content-Type", "image/png")
-		w.WriteHeader(http.StatusOK)
-
-		if err := json.NewEncoder(w).Encode(files); err != nil {
-			if utils.RenderIfError(err, w, http.StatusInternalServerError) {
+		var thumbnailPath = filepath.Join(userDirName, "Thumbnails", file)
+		if _, err := os.Stat(thumbnailPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				thumbnailPath, err = BuildThumbnail(userName, deviceId, file)
+				if err != nil {
+					utils.RenderError(w, err, http.StatusInternalServerError)
+					return
+				}
+			} else {
+				utils.RenderError(w, err, http.StatusInternalServerError)
 				return
 			}
 		}
+		src, err := utils.GetImageFromFilePath(thumbnailPath)
+
+		if err != nil {
+			utils.RenderError(w, err, http.StatusInternalServerError)
+			return
+		}
+		png.Encode(w, src)
+
+		w.Header().Set("Content-Type", "image/png")
+		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func BuildThumbnail(userName string, deviceId string, file string) (string, error) {
+	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+	thumbnailPath := filepath.Join(userDirName, "Thumbnails", file)
+	filePath := filepath.Join(userDirName, file)
+	src, err := utils.GetImageFromFilePath(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	rgba_src := utils.ImageToRGBA(src)
+	resized := utils.ResizeImage(rgba_src, 90)
+	err = os.MkdirAll(filepath.Dir(thumbnailPath), os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	f, err := os.Create(thumbnailPath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	png.Encode(f, resized)
+	return thumbnailPath, nil
 }
