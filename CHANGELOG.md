@@ -1,5 +1,10 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+## 1.0.4 Release notes (2024-08-21)
+
+### Enhancements
+* Creating thumbnails of images while uploading.
+
 ## 1.0.3 Release notes (2024-08-20)
 
 ### Enhancements
