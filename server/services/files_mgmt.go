@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
-	"github.com/takecontrolsoft/sync_server/server/config"
 	host "github.com/takecontrolsoft/sync_server/server/host"
 	"github.com/takecontrolsoft/sync_server/server/impl"
 )
@@ -34,8 +33,8 @@ func (s FilesManagementService) Host() bool {
 
 	http.HandleFunc("/upload", impl.UploadHandler)
 
-	fs := http.FileServer(http.Dir(config.UploadDirectory))
-	http.Handle("/", http.StripPrefix("/", fs))
+	//fs := http.FileServer(http.Dir(config.UploadDirectory))
+	//http.Handle("/", http.StripPrefix("/", fs))
 
 	http.HandleFunc("/folders", impl.GetFoldersHandler)
 

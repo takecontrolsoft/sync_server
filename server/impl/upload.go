@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/flytam/filenamify"
+	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
@@ -75,8 +76,30 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
 		return
 	}
+	year := dateArray[0]
+	month := dateArray[1]
+	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
 
-	f, err := createNewFile(mp, w, userName, dateClassifier)
+	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{
+		Replacement: "0",
+	})
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{
+		Replacement: "0",
+	})
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+
+	f, err := createNewFile(mp, w, userName, filename, deviceId, year, month)
 	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
@@ -93,29 +116,24 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, FileSizeExceeded, http.StatusBadRequest)
 		return
 	}
+	go func() {
+		f.Close()
+		var thumbnailRelPath = filepath.Join(year, month, filename)
+		_, err = BuildThumbnail(userName, deviceId, thumbnailRelPath)
+		if err != nil {
+			logger.ErrorF("Creating thumbnail failed for file %s, %v", thumbnailRelPath, err)
+			return
+		}
+	}()
+
 }
 
-func createNewFile(mp *multipart.Part, w http.ResponseWriter, userName string, dateClassifier string) (*os.File, error) {
-	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
-	if err != nil {
-		return nil, err
-	}
+func createNewFile(mp *multipart.Part, w http.ResponseWriter,
+	userName string, filename string, deviceId string,
+	year string, month string) (*os.File, error) {
 
-	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{
-		Replacement: "0",
-	})
-	if err != nil {
-		return nil, err
-	}
-	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{
-		Replacement: "0",
-	})
-	if err != nil {
-		return nil, err
-	}
-	dateArray := strings.Split(dateClassifier, "-")
-	dirName := filepath.Join(config.UploadDirectory, userName, deviceId, dateArray[0], dateArray[1])
-	err = os.MkdirAll(dirName, os.ModePerm)
+	dirName := filepath.Join(config.UploadDirectory, userName, deviceId, year, month)
+	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}

@@ -39,6 +39,9 @@ var MissingDateClassifier = errors.Errorf("Missing date classifier.").Err
 // An error for wrong date classifier.
 var WrongDateClassifier = errors.Errorf("Wrong date classifier.").Err
 
+// An error for empty storage path.
+var BuildThumbnailFailed = errors.Errorf("Creating thumbnail failed.").Err
+
 type RequestError struct {
 	StatusCode int
 

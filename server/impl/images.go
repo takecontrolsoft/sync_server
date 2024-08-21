@@ -44,18 +44,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		file := result.File
 		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 		var thumbnailPath = filepath.Join(userDirName, "Thumbnails", file)
-		if _, err := os.Stat(thumbnailPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				thumbnailPath, err = BuildThumbnail(userName, deviceId, file)
-				if err != nil {
-					utils.RenderError(w, err, http.StatusInternalServerError)
-					return
-				}
-			} else {
-				utils.RenderError(w, err, http.StatusInternalServerError)
-				return
-			}
-		}
+
 		src, err := utils.GetImageFromFilePath(thumbnailPath)
 
 		if err != nil {
