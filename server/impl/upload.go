@@ -84,16 +84,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{
-		Replacement: "0",
-	})
+	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{})
 	if err != nil {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
 		return
 	}
-	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{
-		Replacement: "0",
-	})
+	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{})
 	if err != nil {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
 		return

@@ -111,7 +111,7 @@ func GetImageFromFilePath(filePath string) (image.Image, error) {
 	if err != nil {
 		logger.Error(err)
 	}
-
+	defer reader.Close()
 	reader.Seek(0, 0)
 
 	m, _, err := image.Decode(reader)
