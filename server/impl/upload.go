@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/flytam/filenamify"
@@ -40,20 +41,35 @@ import (
 // - the file format is not allowed;
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, config.MaxUploadFileSize)
+
 	reader, err := r.MultipartReader()
 	if utils.RenderIfError(err, w, http.StatusBadRequest) {
 		return
 	}
+
 	mp, err := reader.NextPart()
+
 	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
-
-	b := bufio.NewReader(mp)
-	err = validateFileType(b, w)
-	if utils.RenderIfError(err, w, http.StatusBadRequest) {
+	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
 		return
 	}
+
+	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{})
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+
+	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{})
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+
 	userNameEncoded := r.Header.Get("user")
 
 	var name []byte
@@ -71,6 +87,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, MissingDateClassifier, http.StatusBadRequest)
 		return
 	}
+
 	dateArray := strings.Split(dateClassifier, "-")
 	if len(dateArray) < 2 {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
@@ -78,20 +95,23 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	year := dateArray[0]
 	month := dateArray[1]
-	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
+
+	fileLength := r.Header.Get("fileLength")
+	fileLengthInt, err := strconv.ParseInt(fileLength, 0, 64)
 	if err != nil {
-		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
-		return
+		fileLengthInt = 0
+	}
+	fileFullPath := filepath.Join(config.UploadDirectory, userName, deviceId, year, month, filename)
+
+	if fi, err := os.Stat(fileFullPath); err == nil {
+		if fi.Size() == fileLengthInt {
+			return
+		}
 	}
 
-	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{})
-	if err != nil {
-		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
-		return
-	}
-	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{})
-	if err != nil {
-		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+	b := bufio.NewReader(mp)
+	err = validateFileType(b, w)
+	if utils.RenderIfError(err, w, http.StatusBadRequest) {
 		return
 	}
 
