@@ -58,24 +58,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
-	if err != nil {
-		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
-		return
-	}
-
-	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{})
-	if err != nil {
-		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
-		return
-	}
-
-	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{})
-	if err != nil {
-		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
-		return
-	}
-
 	userNameEncoded := r.Header.Get("user")
 
 	var name []byte
@@ -103,15 +85,37 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	month := dateArray[1]
 
 	fileLength := r.Header.Get("fileLength")
-	fileLengthInt, err := strconv.ParseInt(fileLength, 0, 64)
-	if err != nil {
-		fileLengthInt = 0
-	}
-	fileFullPath := filepath.Join(config.UploadDirectory, userName, deviceId, year, month, filename)
 
-	if fi, err := os.Stat(fileFullPath); err == nil {
-		if fileLengthInt > 0 && fi.Size() == fileLengthInt {
-			return
+	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+
+	deviceId, err := filenamify.Filenamify(params["name"], filenamify.Options{})
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+
+	filename, err := filenamify.Filenamify(params["filename"], filenamify.Options{})
+	if err != nil {
+		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
+		return
+	}
+
+	if fileLength != "" {
+		fileLengthInt, err_pi := strconv.ParseInt(fileLength, 0, 64)
+		if err_pi != nil {
+			fileLengthInt = 0
+		}
+
+		fileFullPath := filepath.Join(config.UploadDirectory, userName, deviceId, year, month, filename)
+
+		if fi, err_fi := os.Stat(fileFullPath); err_fi == nil {
+			if fileLengthInt > 0 && fi.Size() == fileLengthInt {
+				return
+			}
 		}
 	}
 

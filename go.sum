@@ -8,16 +8,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/takecontrolsoft/go_multi_log v1.0.2 h1:VBXIrQCTSp1DV9MqJoFKy1s3F9SGGhx/J51FsHVzkUk=
-github.com/takecontrolsoft/go_multi_log v1.0.2/go.mod h1:uY1IzARYk0micU4nMMSqHbWOOdPspEyn0CWAP7knhJo=
-github.com/takecontrolsoft/go_multi_log v1.0.3-0.20240819090612-d020e35eaecb h1:jLeiFJf6bpPXpDHDIwNvzT7XiVAFHkcmARvxntC/UGI=
-github.com/takecontrolsoft/go_multi_log v1.0.3-0.20240819090612-d020e35eaecb/go.mod h1:CjXEI0xj8Pl0hmz+dcjQl54izN2bLVd2k7+exzZDQg0=
-github.com/takecontrolsoft/go_multi_log v1.0.3-0.20240903095739-92abe16708c1 h1:/Ul2EzyF+3ERWMUuKc8tkGRtdQuYVn0rsoihp52Ujts=
-github.com/takecontrolsoft/go_multi_log v1.0.3-0.20240903095739-92abe16708c1/go.mod h1:CjXEI0xj8Pl0hmz+dcjQl54izN2bLVd2k7+exzZDQg0=
 github.com/takecontrolsoft/go_multi_log v1.0.3 h1:J0L8sMRyfFfqCZgC9nutLRYG15nVm78o8mQ4R/REwqA=
 github.com/takecontrolsoft/go_multi_log v1.0.3/go.mod h1:CjXEI0xj8Pl0hmz+dcjQl54izN2bLVd2k7+exzZDQg0=
-github.com/takecontrolsoft/go_multi_log/logger v0.0.0-20240819072635-5a70e7d8a470 h1:GHoYMhmW4mzokwVO8Sh8YYWVHmvyAFEohdEXfPCdINs=
-github.com/takecontrolsoft/go_multi_log/logger v0.0.0-20240819072635-5a70e7d8a470/go.mod h1:Ej5TBFFgW02ad0qLWA+qE4yd9G0KIni837KxKNiDveQ=
 github.com/timandy/routine v1.1.4 h1:L9eAli/ROJcW6LhmwZcusYQcdAqxAXGOQhEXLQSNWOA=
 github.com/timandy/routine v1.1.4/go.mod h1:siBcl8iIsGmhLCajRGRcy7Y7FVcicNXkr97JODdt9fc=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
