@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/flytam/filenamify"
@@ -84,8 +83,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	year := dateArray[0]
 	month := dateArray[1]
 
-	fileLength := r.Header.Get("fileLength")
-
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
 	if err != nil {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
@@ -102,21 +99,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
 		return
-	}
-
-	if fileLength != "" {
-		fileLengthInt, err_pi := strconv.ParseInt(fileLength, 0, 64)
-		if err_pi != nil {
-			fileLengthInt = 0
-		}
-
-		fileFullPath := filepath.Join(config.UploadDirectory, userName, deviceId, year, month, filename)
-
-		if fi, err_fi := os.Stat(fileFullPath); err_fi == nil {
-			if fileLengthInt > 0 && fi.Size() == fileLengthInt {
-				return
-			}
-		}
 	}
 
 	f, err := createNewFile(mp, w, userName, filename, deviceId, year, month)
