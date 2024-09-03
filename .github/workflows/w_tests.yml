@@ -21,6 +21,12 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ inputs.go_version }}
+    
+    - name: Setup FFmpeg
+      uses: AnimMouse/setup-ffmpeg@v
+
+    - name: Use Exiftool
+      uses: woss/exiftool-action@v12.87
 
     - name: Build
       run: go build -v ./...
