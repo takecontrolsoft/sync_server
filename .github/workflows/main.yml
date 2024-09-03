@@ -16,6 +16,13 @@ jobs:
       go_version: ${{ vars.GO_VERSION }}
     uses: ./.github/workflows/w_tests.yml
 
+  build_and_tests_windows:
+    name: Test Windows sync
+    secrets: inherit
+    with:
+      go_version: ${{ vars.GO_VERSION }}
+    uses: ./.github/workflows/w_testswin.yml
+  
   build-artifacts:
     name: Artifacts
     needs: build_and_tests

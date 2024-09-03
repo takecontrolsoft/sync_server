@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"path/filepath"
@@ -202,7 +203,7 @@ func GetToolPath(toolName string) (string, error) {
 			return "", err
 		}
 		executablePath = path
-		exifToolFile = filepath.Join(executablePath, toolName, extension)
+		exifToolFile = fmt.Sprintf("%s%s", filepath.Join(executablePath, toolName), extension)
 	}
 	_, err := os.Stat(exifToolFile)
 	if err != nil {

@@ -1,0 +1,35 @@
+name: Workflow Windows Tests
+
+on:
+  workflow_call:
+    inputs:
+      go_version:
+        description: Go version to be used for the build.
+        required: true
+        type: string   
+env:
+  SYNC_STORAGE_PATH: ${{ vars.SYNC_STORAGE_PATH }}
+  SYNC_SERVER_PORT: ${{ vars.SYNC_SERVER_PORT }}
+
+jobs:
+  build_and_tests_windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ inputs.go_version }}
+    
+    - name: Setup FFmpeg
+      uses: AnimMouse/setup-ffmpeg@v1
+
+    - name: Use Exiftool
+      uses: woss/exiftool-action@v12.87
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./... 
