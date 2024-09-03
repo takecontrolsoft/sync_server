@@ -55,3 +55,6 @@ godoc -http=:8081 -index
 ## How to release
 `git tag v1.0.0`      
 `git push --tags`   
+
+## How to update package by commit hash
+`go get -u "github.com/takecontrolsoft/go_multi_log@d020e35eaecbfb8bfe32d368439d926f58d06d30"`
