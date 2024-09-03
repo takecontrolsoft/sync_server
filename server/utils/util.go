@@ -19,11 +19,8 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"image"
 	"image/color"
-	"path/filepath"
-	"runtime"
 
 	"image/draw"
 	_ "image/gif"
@@ -180,34 +177,4 @@ func GetImageFromFilePath(filePath string) (image.Image, error) {
 	}
 
 	return m, err
-}
-
-func GetExecutablePath() (string, error) {
-	var exPath string
-	ex, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	exPath = filepath.Dir(ex)
-	return exPath, nil
-}
-
-func GetToolPath(toolName string) (string, error) {
-	executablePath := ""
-	extension := ""
-	exifToolFile := toolName
-	if runtime.GOOS == "windows" {
-		extension = ".exe"
-		path, err := GetExecutablePath()
-		if err != nil {
-			return "", err
-		}
-		executablePath = path
-		exifToolFile = fmt.Sprintf("%s%s", filepath.Join(executablePath, toolName), extension)
-	}
-	_, err := os.Stat(exifToolFile)
-	if err != nil {
-		return "", err
-	}
-	return exifToolFile, nil
 }

@@ -16,13 +16,13 @@ limitations under the License.
 package impl
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	"github.com/barasher/go-exiftool"
 	"github.com/takecontrolsoft/sync_server/server/config"
-	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
 func ExtractMetadata(userName string, deviceId string, file string) (string, error) {
@@ -30,23 +30,21 @@ func ExtractMetadata(userName string, deviceId string, file string) (string, err
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	metadataPath := filepath.Join(userDirName, "Metadata", fmt.Sprintf("%s.json", file))
 	filePath := filepath.Join(userDirName, file)
-	toolPath, err := utils.GetToolPath("exiftool")
-	if err != nil {
-		return "", err
-	}
-	cmd := exec.Command(toolPath, filePath, "-json")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-	err = os.MkdirAll(filepath.Dir(metadataPath), os.ModePerm)
-	if err != nil {
-		return "", err
-	}
 
-	err = os.WriteFile(metadataPath, out, 0644)
+	et, err := exiftool.NewExiftool()
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
+	defer et.Close()
+
+	fileInfos := et.ExtractMetadata(filePath)
+	outputJson, err := json.Marshal(fileInfos)
+	if err != nil {
+		return "", err
+	}
+	err = os.WriteFile(metadataPath, outputJson, 0644)
+	if err != nil {
+		return "", err
+	}
+	return metadataPath, nil
 }
