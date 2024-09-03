@@ -48,10 +48,16 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mp, err := reader.NextPart()
-
 	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
+
+	b := bufio.NewReader(mp)
+	err = validateFileType(b, w)
+	if utils.RenderIfError(err, w, http.StatusBadRequest) {
+		return
+	}
+
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
 	if err != nil {
 		utils.RenderError(w, WrongDateClassifier, http.StatusBadRequest)
@@ -104,15 +110,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	fileFullPath := filepath.Join(config.UploadDirectory, userName, deviceId, year, month, filename)
 
 	if fi, err := os.Stat(fileFullPath); err == nil {
-		if fi.Size() == fileLengthInt {
+		if fileLengthInt > 0 && fi.Size() == fileLengthInt {
 			return
 		}
-	}
-
-	b := bufio.NewReader(mp)
-	err = validateFileType(b, w)
-	if utils.RenderIfError(err, w, http.StatusBadRequest) {
-		return
 	}
 
 	f, err := createNewFile(mp, w, userName, filename, deviceId, year, month)
