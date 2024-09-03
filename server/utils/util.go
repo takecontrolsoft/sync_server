@@ -1,6 +1,22 @@
+/* Copyright 2024 Take Control - Software & Infrastructure
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"image"
@@ -19,6 +35,7 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/go_multi_log/logger"
+	"github.com/takecontrolsoft/sync_server/server/mediatypes"
 )
 
 func RenderIfError(err error, w http.ResponseWriter, statusCode int) bool {
@@ -43,6 +60,26 @@ func IsAllowedFileType(fileType string, w http.ResponseWriter) bool {
 		result = result || strings.HasPrefix(fileType, allowed[i])
 	}
 	return result
+}
+
+func GetMediaType(fileType string) mediatypes.MediaType {
+	allowed := []string{"image/", "video/", "audio/"}
+	result := ""
+	for i := range allowed {
+		if strings.HasPrefix(fileType, allowed[i]) {
+			result = allowed[i]
+		}
+	}
+	switch result {
+	case "image/":
+		return mediatypes.Image
+	case "video/":
+		return mediatypes.Video
+	case "audio/":
+		return mediatypes.Audio
+	default:
+		return mediatypes.Unknown
+	}
 }
 
 func GenerateRandomString(length int) string {
@@ -106,12 +143,31 @@ func ImageToRGBA(src image.Image) *image.RGBA {
 	return dst
 }
 
+func GetThumbnailFileAddedExtension(filePath string) (string, error) {
+	reader, err := os.Open(filePath)
+	if err != nil {
+		logger.Error(err)
+		return "", err
+	}
+	defer reader.Close()
+	b := bufio.NewReader(reader)
+	n, _ := b.Peek(512)
+	fileType := http.DetectContentType(n)
+	mediaType := GetMediaType(fileType)
+	if mediaType != mediatypes.Image {
+		return ".jpeg", nil
+	}
+	return "", nil
+}
+
 func GetImageFromFilePath(filePath string) (image.Image, error) {
 	reader, err := os.Open(filePath)
 	if err != nil {
 		logger.Error(err)
+		return nil, err
 	}
 	defer reader.Close()
+
 	reader.Seek(0, 0)
 
 	m, _, err := image.Decode(reader)

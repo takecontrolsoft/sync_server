@@ -16,6 +16,20 @@
 # sync server
 Golang server for uploading files and media files processing workflows.
 
+# prerequisites
+* MacOs
+    `brew install exiftool`
+    `export PATH=$PATH:/usr/local/bin`
+    `brew install ffmpeg`
+* Linux
+    cd <your download directory>
+    gzip -dc Image-ExifTool-12.96.tar.gz | tar -xf -
+    cd Image-ExifTool-12.96
+    sudo make install
+
+
+
+
 
 # Building and release
 Go to CONTRIBUTING.md for more instructions.

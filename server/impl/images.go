@@ -17,9 +17,9 @@ package impl
 
 import (
 	"encoding/json"
+	"fmt"
 	"image/png"
 	"net/http"
-	"os"
 	"path/filepath"
 
 	"github.com/go-errors/errors"
@@ -43,8 +43,14 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		deviceId := result.UserData.DeviceId
 		file := result.File
 		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-		var thumbnailPath = filepath.Join(userDirName, "Thumbnails", file)
+		originalFilePath := filepath.Join(userDirName, file)
+		thumbnailAddedExtension, err := utils.GetThumbnailFileAddedExtension(originalFilePath)
+		if err != nil {
+			utils.RenderError(w, err, http.StatusInternalServerError)
+			return
+		}
 
+		var thumbnailPath = fmt.Sprintf("%s%s", filepath.Join(userDirName, "Thumbnails", file), thumbnailAddedExtension)
 		src, err := utils.GetImageFromFilePath(thumbnailPath)
 
 		if err != nil {
@@ -56,28 +62,4 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
 		w.WriteHeader(http.StatusOK)
 	}
-}
-
-func BuildThumbnail(userName string, deviceId string, file string) (string, error) {
-	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-	thumbnailPath := filepath.Join(userDirName, "Thumbnails", file)
-	filePath := filepath.Join(userDirName, file)
-	src, err := utils.GetImageFromFilePath(filePath)
-	if err != nil {
-		return "", err
-	}
-
-	rgba_src := utils.ImageToRGBA(src)
-	resized := utils.ResizeImage(rgba_src, 90)
-	err = os.MkdirAll(filepath.Dir(thumbnailPath), os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-	f, err := os.Create(thumbnailPath)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	png.Encode(f, resized)
-	return thumbnailPath, nil
 }

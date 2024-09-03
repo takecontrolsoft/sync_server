@@ -3,7 +3,9 @@
 ## 1.0.5 Release notes (2024-09-03)
 
 ### Enhancements
-* Skip files with the same name and size.
+* Generating Video thumbnails.
+* Improved Photos thumbnails.
+* Extracting media file properties to json metadata fails.
 
 ## 1.0.4 Release notes (2024-08-21)
 

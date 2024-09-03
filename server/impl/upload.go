@@ -29,6 +29,7 @@ import (
 	"github.com/flytam/filenamify"
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/mediatypes"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
@@ -52,7 +53,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := bufio.NewReader(mp)
-	err = validateFileType(b, w)
+	mediatype, err := validateFileType(b, w)
 	if utils.RenderIfError(err, w, http.StatusBadRequest) {
 		return
 	}
@@ -118,12 +119,26 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, FileSizeExceeded, http.StatusBadRequest)
 		return
 	}
+	var relPath = filepath.Join(year, month, filename)
+
 	go func() {
-		f.Close()
-		var thumbnailRelPath = filepath.Join(year, month, filename)
-		_, err = BuildThumbnail(userName, deviceId, thumbnailRelPath)
+		_, err = ExtractMetadata(userName, deviceId, relPath)
 		if err != nil {
-			logger.ErrorF("Creating thumbnail failed for file %s, %v", thumbnailRelPath, err)
+			logger.ErrorF("Creating metadata failed for file %s, %v", relPath, err)
+			return
+		}
+		switch mediatype {
+		case mediatypes.Video:
+			_, err = BuildVideoThumbnail(userName, deviceId, relPath)
+		case mediatypes.Image:
+			_, err = BuildImageThumbnail(userName, deviceId, relPath)
+		case mediatypes.Audio:
+			_, err = BuildAudioThumbnail(userName, deviceId, relPath)
+		default:
+			logger.Info("Unknown media type for thumbnail")
+		}
+		if err != nil {
+			logger.ErrorF("Creating thumbnail failed for file %s, %v", relPath, err)
 			return
 		}
 	}()
@@ -147,12 +162,13 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter,
 	return f, err
 }
 
-func validateFileType(b *bufio.Reader, w http.ResponseWriter) error {
+func validateFileType(b *bufio.Reader, w http.ResponseWriter) (mediatypes.MediaType, error) {
 	n, _ := b.Peek(512)
 	fileType := http.DetectContentType(n)
+	mediaType := utils.GetMediaType(fileType)
 	if !utils.IsAllowedFileType(fileType, w) {
 		err := InvalidFileTypeUploaded(fileType)
-		return err
+		return mediaType, err
 	}
-	return nil
+	return mediaType, nil
 }
