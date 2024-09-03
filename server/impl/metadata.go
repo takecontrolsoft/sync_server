@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
 func ExtractMetadata(userName string, deviceId string, file string) (string, error) {
@@ -29,8 +30,11 @@ func ExtractMetadata(userName string, deviceId string, file string) (string, err
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	metadataPath := filepath.Join(userDirName, "Metadata", fmt.Sprintf("%s.json", file))
 	filePath := filepath.Join(userDirName, file)
-
-	cmd := exec.Command("exiftool", filePath, "-json")
+	toolPath, err := utils.GetToolPath("exiftool")
+	if err != nil {
+		return "", err
+	}
+	cmd := exec.Command(toolPath, filePath, "-json")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err

@@ -125,7 +125,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		_, err = ExtractMetadata(userName, deviceId, relPath)
 		if err != nil {
 			logger.ErrorF("Creating metadata failed for file %s, %v", relPath, err)
-			return
 		}
 		switch mediatype {
 		case mediatypes.Video:
@@ -139,7 +138,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			logger.ErrorF("Creating thumbnail failed for file %s, %v", relPath, err)
-			return
 		}
 	}()
 
