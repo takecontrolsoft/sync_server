@@ -50,7 +50,7 @@ godoc -http=:8081 -index
 `docker rmi tc:latest -f`
 
 ## To run docker image "tc" run:
-`docker run --name t1 -p 3000:3000 tc:latest -e "LOG_LEVEL=3" -v /photos:./bin /logs:./bin --add-host host.docker.internal:host-gateway`
+`sudo docker run --name mobisync -p 3000:3000 --mount type=bind,source=/mobisync,target=/data -e "LOG_LEVEL=3" takecontrolorg/sync_server:latest --add-host host.docker.internal:host-gateway`
 
 ## How to release
 `git tag v1.0.0`      

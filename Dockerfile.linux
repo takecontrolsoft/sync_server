@@ -15,7 +15,6 @@ RUN chmod 775 data
 RUN chmod g+s data
 RUN mkdir data/photos
 RUN mkdir data/logs
-VOLUME data
 
 #Install Image-ExifTool-12.98
 WORKDIR /opt
