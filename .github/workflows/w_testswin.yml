@@ -27,13 +27,10 @@ jobs:
 
     - name: Set Up Exiftool
       shell: powershell
-      run: >
-          $exif = Invoke-WebRequest https://exiftool.org/exiftool-12.98_64.zip |
+      run: |
+          $exif = Invoke-WebRequest https://exiftool.org/exiftool-12.98_64.zip 
           Expand-Archive -Path $exif -DestinationPath "\exiftool" -Force 
-          
-    - name: Set Up Exiftool
-      shell: powershell
-      run: $Env:Path += 'C:\exiftool;'
+          $Env:Path += 'C:\exiftool;'
 
     - name: Build
       run: go build -v ./...
