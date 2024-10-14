@@ -25,8 +25,14 @@ jobs:
     - name: Setup FFmpeg
       uses: AnimMouse/setup-ffmpeg@v1
 
-    - name: Use Exiftool
-      uses: woss/exiftool-action@v12.92
+    - name: Set Up Exiftool
+      run: wget https://exiftool.org/Image-ExifTool-12.98.tar.gz /opt/ |
+          cd opt
+          gzip -dc Image-ExifTool-12.98.tar.gz | tar -xf - |
+          mv Image-ExifTool-12.98 exiftool |
+          cd exiftool |
+          ln -s "${PWD}/exiftool" /usr/local/bin/ |
+          chmod +x /usr/local/bin/exiftool
 
     - name: Build
       run: go build -v ./...
