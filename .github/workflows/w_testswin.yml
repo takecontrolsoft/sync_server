@@ -28,7 +28,7 @@ jobs:
     - name: Set Up Exiftool
       shell: powershell
       run: (Invoke-WebRequest https://exiftool.org/exiftool-12.98_64.zip).Content | 
-          Expand-Archive -Path C:\Temp\exiftool-12.98_64.zip -DestinationPath "C:\exiftool"
+          Expand-Archive -DestinationPath "C:\exiftool"
 
     - name: Set exiftool path
       shell: powershell
