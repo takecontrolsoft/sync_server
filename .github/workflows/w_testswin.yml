@@ -36,7 +36,8 @@ jobs:
           Rename-Item -path "c:\exiftool\exiftool-12.98_64" -NewName "bin"
           Rename-Item -Path "c:\exiftool\bin\exiftool(-k).exe" -NewName "exiftool.exe"
           Remove-Item $dest
-          Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\exiftool\bin", "Machine")
+          $Env:PATH += "c:\exiftool\bin"
+        #Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\exiftool\bin", "Machine")
 
     - name: Build
       run: go build -v ./...
