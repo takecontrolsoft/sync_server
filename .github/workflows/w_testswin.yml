@@ -26,14 +26,10 @@ jobs:
       uses: AnimMouse/setup-ffmpeg@v1
 
     - name: Set Up Exiftool
-      uses: engineerd/configurator@v0.0.1
-      with:
-        name: "exiftool"
-        url: "https://exiftool.org/exiftool-12.98_64.zip"
-        pathInArchive: "."
+      run: (Invoke-WebRequest https://exiftool.org/exiftool-12.98_64.zip).Content | Extract-Archive -DestinationPath C:\exiftool
 
     - name: Set exiftool path
-      run: $Env:Path += '${{ github.workspace }}\exiftool;'
+      run: $Env:Path += 'C:\exiftool;'
 
     - name: Build
       run: go build -v ./...
