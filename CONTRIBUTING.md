@@ -50,7 +50,7 @@ godoc -http=:8081 -index
 `docker rmi tc:latest -f`
 
 ## To run docker image "tc" run:
-`docker run --name t1 -p 3000:3000 tc:latest -e "LOG_LEVEL=3" -v /photos:./bin /logs:./bin`
+`docker run --name t1 -p 3000:3000 tc:latest -e "LOG_LEVEL=3" -v /photos:./bin /logs:./bin --add-host host.docker.internal:host-gateway`
 
 ## How to release
 `git tag v1.0.0`      
