@@ -31,12 +31,9 @@ jobs:
         name: "exiftool"
         url: "https://exiftool.org/exiftool-12.98_64.zip"
         pathInArchive: "."
-        
-    - name: add CoAPP path to module lookup paths
-      uses: myci-actions/append-to-path-windows@2
-      with:
-        path: exiftool
-        env-var: PATH
+
+    - name: Set exiftool path
+      run: $Env:Path += '${{ github.workspace }}\exiftool;'
 
     - name: Build
       run: go build -v ./...
