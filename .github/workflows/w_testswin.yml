@@ -29,12 +29,14 @@ jobs:
       shell: powershell
       run: |
           New-Item -Path "c:\" -Name "exiftool" -ItemType "directory"
-          New-Item -Path "c:\exiftool" -Name "bin" -ItemType "directory"
           $dest = "c:\exiftool\exiftool-12.98_64.zip"
           $url = "https://exiftool.org/exiftool-12.98_64.zip"
           Invoke-WebRequest -Uri $url -OutFile $dest
-          Expand-Archive -Path $dest -DestinationPath "c:\exiftool\bin" -Force 
-          $Env:Path += 'c:\exiftool\bin;'
+          Expand-Archive -Path $dest -DestinationPath "c:\exiftool" -Force 
+          Rename-Item -path "c:\exiftool\exiftool-12.98_64" -NewName "bin"
+          Rename-Item -Path "c:\exiftool\bin\exiftool(-k).exe" -NewName "exiftool.exe"
+          Remove-Item $dest
+          Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\exiftool\bin", "Machine")
 
     - name: Build
       run: go build -v ./...
