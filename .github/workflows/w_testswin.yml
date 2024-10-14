@@ -26,13 +26,17 @@ jobs:
       uses: AnimMouse/setup-ffmpeg@v1
 
     - name: Set Up Exiftool
-      run: wget https://exiftool.org/Image-ExifTool-12.98.tar.gz /opt/ |
-          cd opt
-          gzip -dc Image-ExifTool-12.98.tar.gz | tar -xf - |
-          mv Image-ExifTool-12.98 exiftool |
-          cd exiftool |
-          ln -s "${PWD}/exiftool" /usr/local/bin/ |
-          chmod +x /usr/local/bin/exiftool
+      uses: engineerd/configurator@v0.0.1
+      with:
+        name: "exiftool"
+        url: "https://exiftool.org/exiftool-12.98_64.zip"
+        pathInArchive: "."
+        
+    - name: add CoAPP path to module lookup paths
+      uses: myci-actions/append-to-path-windows@2
+      with:
+        path: exiftool
+        env-var: PATH
 
     - name: Build
       run: go build -v ./...
