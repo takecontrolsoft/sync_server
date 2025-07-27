@@ -30,6 +30,7 @@ import (
 type fileData struct {
 	UserData userData
 	File     string
+	Quality  string
 }
 
 func GetImageHandler(w http.ResponseWriter, r *http.Request) {
@@ -42,16 +43,23 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		userName := result.UserData.User
 		deviceId := result.UserData.DeviceId
 		file := result.File
+		quality := result.Quality
 		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 		originalFilePath := filepath.Join(userDirName, file)
-		thumbnailAddedExtension, err := utils.GetThumbnailFileAddedExtension(originalFilePath)
-		if err != nil {
-			utils.RenderError(w, err, http.StatusInternalServerError)
-			return
-		}
+		path := ""
+		if quality == "full" {
+			path = originalFilePath
+		} else {
+			thumbnailAddedExtension, err := utils.GetThumbnailFileAddedExtension(originalFilePath)
+			if err != nil {
+				utils.RenderError(w, err, http.StatusInternalServerError)
+				return
+			}
 
-		var thumbnailPath = fmt.Sprintf("%s%s", filepath.Join(userDirName, "Thumbnails", file), thumbnailAddedExtension)
-		src, err := utils.GetImageFromFilePath(thumbnailPath)
+			path = fmt.Sprintf("%s%s", filepath.Join(userDirName, "Thumbnails", file), thumbnailAddedExtension)
+
+		}
+		src, err := utils.GetImageFromFilePath(path)
 
 		if err != nil {
 			utils.RenderError(w, err, http.StatusInternalServerError)
