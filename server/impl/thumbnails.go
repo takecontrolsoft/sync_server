@@ -26,6 +26,7 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 
 	"github.com/disintegration/imaging"
+	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
@@ -38,7 +39,7 @@ func GetFrameFromVideo(inFileName string, frameNum int) io.Reader {
 		WithOutput(buf, os.Stdout).
 		Run()
 	if err != nil {
-		panic(err)
+		logger.Error(err)
 	}
 	return buf
 }
