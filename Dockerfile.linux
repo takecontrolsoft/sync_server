@@ -16,11 +16,11 @@ RUN chmod g+s data
 RUN mkdir data/photos
 RUN mkdir data/logs
 
-#Install Image-ExifTool-12.98
+#Install Image-ExifTool-13.33
 WORKDIR /opt
-ADD https://exiftool.org/Image-ExifTool-12.98.tar.gz /opt/
+ADD https://exiftool.org/Image-ExifTool-13.33.tar.gz /opt/
 RUN gzip -dc Image-ExifTool-12.98.tar.gz | tar -xf -
-RUN mv Image-ExifTool-12.98 exiftool
+RUN mv Image-ExifTool-13.33 exiftool
 RUN cd exiftool
 RUN ln -s "${PWD}/exiftool" /usr/local/bin/
 RUN chmod +x /usr/local/bin/exiftool
