@@ -1,5 +1,10 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+## 1.0.6 Release notes (2025-07-27)
+
+### Enhancements
+* Returning full size of image support.
+
 ## 1.0.5 Release notes (2024-09-03)
 
 ### Enhancements
