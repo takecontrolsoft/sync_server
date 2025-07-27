@@ -42,6 +42,11 @@ func ExtractMetadata(userName string, deviceId string, file string) (string, err
 	if err != nil {
 		return "", err
 	}
+	dir := filepath.Dir(metadataPath)
+	err = os.MkdirAll(dir, 0755)
+	if err != nil {
+		return "", err
+	}
 	err = os.WriteFile(metadataPath, outputJson, 0644)
 	if err != nil {
 		return "", err
