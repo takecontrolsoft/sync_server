@@ -3,7 +3,9 @@
 ## 1.0.6 Release notes (2025-07-27)
 
 ### Enhancements
-* Returning full size of image support.
+* Added support for returning full-size images
+### Fixes
+* Fixed issue where metadata files would fail to write when parent directories didn't exist - directories are now created automatically
 
 ## 1.0.5 Release notes (2024-09-03)
 
