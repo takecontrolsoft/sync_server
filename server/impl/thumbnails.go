@@ -18,6 +18,7 @@ package impl
 import (
 	"bytes"
 	"fmt"
+	"image"
 	"image/png"
 	"io"
 	"os"
@@ -74,6 +75,31 @@ func BuildVideoThumbnail(userName string, deviceId string, file string) (string,
 	return thumbnailPath, nil
 }
 
+// applyEXIFOrientation transforms the image according to EXIF Orientation (1-8).
+// imaging: Rotate90 = 90° CCW, Rotate270 = 90° CW.
+func applyEXIFOrientation(src image.Image, orientation int) image.Image {
+	switch orientation {
+	case 1:
+		return src
+	case 2:
+		return imaging.FlipH(src)
+	case 3:
+		return imaging.Rotate180(src)
+	case 4:
+		return imaging.FlipV(src)
+	case 5:
+		return imaging.Rotate90(imaging.FlipH(src))
+	case 6:
+		return imaging.Rotate270(src)
+	case 7:
+		return imaging.Rotate270(imaging.FlipH(src))
+	case 8:
+		return imaging.Rotate90(src)
+	default:
+		return src
+	}
+}
+
 func BuildImageThumbnail(userName string, deviceId string, file string) (string, error) {
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	thumbnailPath := filepath.Join(userDirName, "Thumbnails", file)
@@ -83,6 +109,11 @@ func BuildImageThumbnail(userName string, deviceId string, file string) (string,
 	if err != nil {
 		return "", err
 	}
+
+	// Apply EXIF orientation so thumbnail is displayed correctly (e.g. phone photos rotated 90°).
+	metadataPath := filepath.Join(userDirName, "Metadata", file+".json")
+	orientation := GetOrientationFromMetadata(metadataPath)
+	src = applyEXIFOrientation(src, orientation)
 
 	// Resize srcImage to width = 300px preserving the aspect ratio.
 	resized := imaging.Resize(src, 300, 0, imaging.Lanczos)

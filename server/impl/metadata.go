@@ -59,3 +59,37 @@ func ExtractMetadata(userName string, deviceId string, file string) (string, err
 	}
 	return metadataPath, nil
 }
+
+// GetOrientationFromMetadata reads the EXIF Orientation (1-8) from a metadata JSON file.
+// Returns 1 (normal) if the file is missing, invalid, or Orientation is absent.
+func GetOrientationFromMetadata(metadataPath string) int {
+	data, err := os.ReadFile(metadataPath)
+	if err != nil {
+		return 1
+	}
+	var fileInfos []struct {
+		Fields map[string]interface{} `json:"Fields"`
+	}
+	if err := json.Unmarshal(data, &fileInfos); err != nil {
+		return 1
+	}
+	if len(fileInfos) == 0 || fileInfos[0].Fields == nil {
+		return 1
+	}
+	o := fileInfos[0].Fields["Orientation"]
+	if o == nil {
+		return 1
+	}
+	switch v := o.(type) {
+	case float64:
+		orient := int(v)
+		if orient >= 1 && orient <= 8 {
+			return orient
+		}
+	case int:
+		if v >= 1 && v <= 8 {
+			return v
+		}
+	}
+	return 1
+}

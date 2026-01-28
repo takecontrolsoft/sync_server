@@ -60,14 +60,20 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 		src, err := utils.GetImageFromFilePath(path)
-
 		if err != nil {
 			utils.RenderError(w, err, http.StatusInternalServerError)
 			return
 		}
-		png.Encode(w, src)
+
+		// Apply EXIF orientation for full-quality so the image displays correctly (e.g. phone photos).
+		if quality == "full" {
+			metadataPath := filepath.Join(userDirName, "Metadata", file+".json")
+			orientation := GetOrientationFromMetadata(metadataPath)
+			src = applyEXIFOrientation(src, orientation)
+		}
 
 		w.Header().Set("Content-Type", "image/png")
 		w.WriteHeader(http.StatusOK)
+		png.Encode(w, src)
 	}
 }
