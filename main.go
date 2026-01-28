@@ -84,6 +84,7 @@ func main() {
 	}
 	logger.Info("Starting Sync server ...")
 
+	config.InitBinDirectory()
 	logger.InfoF(" - port = %d\n", config.PortNumber)
 	logger.InfoF(" - storage path = %s\n", config.UploadDirectory)
 	logger.InfoF(" - log path = %s\n", config.LogPath)

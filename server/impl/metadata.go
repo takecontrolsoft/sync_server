@@ -31,7 +31,13 @@ func ExtractMetadata(userName string, deviceId string, file string) (string, err
 	metadataPath := filepath.Join(userDirName, "Metadata", fmt.Sprintf("%s.json", file))
 	filePath := filepath.Join(userDirName, file)
 
-	et, err := exiftool.NewExiftool()
+	var et *exiftool.Exiftool
+	var err error
+	if config.BinDirectory != "" {
+		et, err = exiftool.NewExiftool(exiftool.SetExiftoolBinaryPath(config.ExiftoolBinary()))
+	} else {
+		et, err = exiftool.NewExiftool()
+	}
 	if err != nil {
 		return "", err
 	}

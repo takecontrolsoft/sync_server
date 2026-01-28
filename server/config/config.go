@@ -20,6 +20,8 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/go_multi_log/logger/levels"
@@ -61,6 +63,44 @@ var LogPath string
 
 // Global variable for log level
 var LogLevel levels.LogLevel
+
+// BinDirectory is the directory of the sync_server executable.
+// Place exiftool and ffmpeg executables here so the server finds them.
+var BinDirectory string
+
+// InitBinDirectory sets BinDirectory to the executable's directory and
+// prepends it to PATH so exiftool and ffmpeg are found when next to sync_server.
+func InitBinDirectory() {
+	exe, err := os.Executable()
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	BinDirectory = filepath.Dir(exe)
+	pathSep := string(os.PathListSeparator)
+	if pathEnv := os.Getenv("PATH"); pathEnv != "" {
+		_ = os.Setenv("PATH", BinDirectory+pathSep+pathEnv)
+	} else {
+		_ = os.Setenv("PATH", BinDirectory)
+	}
+	logger.InfoF("Bin directory (exiftool/ffmpeg): %s", BinDirectory)
+}
+
+// ExiftoolBinary returns the path to the exiftool executable (next to sync_server).
+func ExiftoolBinary() string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(BinDirectory, "exiftool.exe")
+	}
+	return filepath.Join(BinDirectory, "exiftool")
+}
+
+// FfmpegBinary returns the path to the ffmpeg executable (next to sync_server).
+func FfmpegBinary() string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(BinDirectory, "ffmpeg.exe")
+	}
+	return filepath.Join(BinDirectory, "ffmpeg")
+}
 
 // Initialize the variables [UploadDirectory], [PortNumber], [LogPath] and [LogLevel]
 // from the environment variables [UploadPathVariable], [PortVariable], [LogPathVariable] and [LogLevelVariable].

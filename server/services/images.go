@@ -28,6 +28,7 @@ type ImagesService struct{}
 func (s ImagesService) Host() bool {
 	fmt.Println("ImagesService::Host()")
 	http.HandleFunc("/img", impl.GetImageHandler)
+	http.HandleFunc("/stream", impl.GetStreamHandler)
 	return true
 }
 

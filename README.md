@@ -16,6 +16,20 @@
 # sync server
 Golang server for uploading files and media files processing workflows.
 
+## API endpoints
+
+Base URL: `http://<host>:<port>` (e.g. `http://localhost:8080`).
+
+| Method | Endpoint      | Description |
+|--------|---------------|-------------|
+| **POST** | `/upload`   | Upload a file (multipart). Headers: `user` (JSON string), `date` (e.g. `2024-01`). Saves under `user/deviceId/` and creates thumbnails for images/videos. |
+| **POST** | `/folders`  | List folder structure (years and months) for a user and device. Body: `{ "User": "", "DeviceId": "" }`. Returns JSON array of `{ Year, Months[] }`. |
+| **POST** | `/files`    | List file paths in a folder. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Folder": "2024/01" }`. Returns JSON array of file path strings. |
+| **POST** | `/img`      | Get image or thumbnail as PNG bytes. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "File": "<path>", "Quality": "full" \| "" }`. Use `Quality: "full"` for original image; omit or empty for thumbnail. |
+| **GET**  | `/stream`   | Stream video/audio file with HTTP Range support (for playback/seek). Query: `User`, `DeviceId`, `File` (URL-encoded path, e.g. `2024/01/video.mp4`). |
+| **POST** | `/delete-all` | Delete all stored data for a user and device. Body: `{ "User": "", "DeviceId": "" }`. |
+| **GET**  | `/setup_info` | Placeholder; returns a short info message. |
+
 # prerequisites
 * MacOs
   
@@ -35,8 +49,14 @@ Golang server for uploading files and media files processing workflows.
 
     sudo apt install ffmpeg
 
+* Windows
 
+  The server looks for **exiftool** and **ffmpeg** in the same directory as `sync_server.exe`.  
+  **Release artifacts** for Windows already include `exiftool.exe`, `ffmpeg.exe`, and `ffprobe.exe` next to the server executable.  
+  For a custom build, place `exiftool.exe` and `ffmpeg.exe` in the folder where `sync_server.exe` is located, or install them system-wide and add their `bin` folder to `PATH`.
 
+  - ExifTool: [exiftool.org](https://exiftool.org/) — download the Windows executable (e.g. `exiftool-13.33_64.zip`), extract and copy `exiftool(-k).exe` as `exiftool.exe` next to `sync_server.exe`.
+  - FFmpeg: e.g. [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases) — copy `ffmpeg.exe` (and optionally `ffprobe.exe`) from the archive’s `bin` folder next to `sync_server.exe`.
 
 
 # Building and release

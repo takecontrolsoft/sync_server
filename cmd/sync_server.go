@@ -136,6 +136,7 @@ func main() {
 	}
 	fmt.Println("Starting Sync server ...")
 
+	config.InitBinDirectory()
 	fmt.Printf(" - port = %d\n", config.PortNumber)
 	fmt.Printf(" - storage path = %s\n", config.UploadDirectory)
 	fmt.Printf(" - log files path = %s\n", config.LogPath)
