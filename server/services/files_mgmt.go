@@ -52,9 +52,6 @@ func (s FilesManagementService) Host() bool {
 
 	http.HandleFunc("/move-to-trash", impl.MoveToTrashHandler)
 	http.HandleFunc("/restore", impl.RestoreHandler)
-	http.HandleFunc("/empty-trash", impl.EmptyTrashHandler)
-
-	http.HandleFunc("/delete-all", impl.DeleteAllHandler)
 
 	return true
 }

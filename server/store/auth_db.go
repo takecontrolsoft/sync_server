@@ -14,7 +14,7 @@ limitations under the License.
 */
 
 // Package store provides a small local SQLite database for user names and
-// password hashes, used to protect dangerous endpoints like /delete-all and /empty-trash.
+// password hashes, used for login and registration.
 package store
 
 import (

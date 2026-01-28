@@ -17,12 +17,9 @@ package impl
 
 import (
 	"encoding/json"
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
-	"sort"
 	"strings"
 
 	"github.com/takecontrolsoft/sync_server/server/config"
@@ -201,92 +198,6 @@ func RestoreHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-}
-
-type emptyTrashData struct {
-	User     string `json:"User"`
-	DeviceId string `json:"DeviceId"`
-	Password string `json:"Password"`
-}
-
-// EmptyTrashHandler permanently deletes the entire Trash folder (and all its contents:
-// main files, Trash/Thumbnails, Trash/Metadata). Requires auth (token or password).
-// POST body: { "User": "", "DeviceId": "", "Password": "" } or Authorization: Bearer <token>
-func EmptyTrashHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	var result emptyTrashData
-	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
-		utils.RenderError(w, err, http.StatusBadRequest)
-		return
-	}
-	userFromClient := result.User
-	deviceId := result.DeviceId
-	if userFromClient == "" || deviceId == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	userId := RequireAuthForDangerous(w, r, userFromClient, deviceId, result.Password)
-	if userId == "" {
-		return
-	}
-	userDir := filepath.Join(config.UploadDirectory, userId, deviceId)
-	trashPath := filepath.Join(userDir, TrashFolder)
-	if err := removeTrashDirAll(trashPath); err != nil {
-		utils.RenderError(w, err, http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-}
-
-// removeTrashDirAll deletes the entire Trash directory and its contents.
-// On Windows, clears read-only before delete so os.RemoveAll-style deletion succeeds.
-func removeTrashDirAll(trashPath string) error {
-	if _, err := os.Stat(trashPath); err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	var files []string
-	var dirs []string
-	err := filepath.WalkDir(trashPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			dirs = append(dirs, path)
-			return nil
-		}
-		files = append(files, path)
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	// Remove all files first (on Windows clear read-only so delete succeeds).
-	for _, path := range files {
-		if runtime.GOOS == "windows" {
-			_ = os.Chmod(path, 0666)
-		}
-		if err := os.Remove(path); err != nil {
-			return err
-		}
-	}
-	// Remove subdirs from deepest to shallowest, then the Trash root.
-	sort.Slice(dirs, func(i, j int) bool { return len(dirs[i]) > len(dirs[j]) })
-	for _, path := range dirs {
-		if runtime.GOOS == "windows" {
-			_ = os.Chmod(path, 0777)
-		}
-		if err := os.Remove(path); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // moveFile moves a file, creating parent dirs of dst. No-op if src does not exist.

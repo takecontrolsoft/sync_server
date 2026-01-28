@@ -18,7 +18,6 @@ package impl
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/store"
@@ -113,28 +112,3 @@ func ResolveToUserId(user string) string {
 	return store.GetUserIdByUsername(user)
 }
 
-// RequireAuthForDangerous checks Authorization: Bearer <token> or body Password for User.
-// Returns the userId for disk path if valid, else empty and writes 401.
-func RequireAuthForDangerous(w http.ResponseWriter, r *http.Request, user, deviceId, password string) string {
-	if config.AuthDBPath == "" {
-		return ResolveToUserId(user)
-	}
-	token := ""
-	if s := r.Header.Get("Authorization"); strings.HasPrefix(s, "Bearer ") {
-		token = strings.TrimSpace(s[7:])
-	}
-	if token != "" {
-		uid := store.ValidateToken(token)
-		if uid != "" {
-			resolved := ResolveToUserId(user)
-			if resolved == uid {
-				return uid
-			}
-		}
-	}
-	if password != "" && store.VerifyUser(user, password) {
-		return store.GetUserIdByUsername(user)
-	}
-	w.WriteHeader(http.StatusUnauthorized)
-	return ""
-}
