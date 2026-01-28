@@ -40,11 +40,15 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 			utils.RenderError(w, errors.Errorf("$Required json input {UserData: { User: '', DeviceId: ''}, 	File: ''}"), http.StatusBadRequest)
 			return
 		}
-		userName := result.UserData.User
+		userFromClient := result.UserData.User
 		deviceId := result.UserData.DeviceId
+		userId := ResolveToUserId(userFromClient)
+		if userId == "" {
+			userId = userFromClient
+		}
 		file := result.File
 		quality := result.Quality
-		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+		userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
 		originalFilePath := filepath.Join(userDirName, file)
 		path := ""
 		if quality == "full" {
@@ -55,9 +59,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 				utils.RenderError(w, err, http.StatusInternalServerError)
 				return
 			}
-
-			path = fmt.Sprintf("%s%s", filepath.Join(userDirName, "Thumbnails", file), thumbnailAddedExtension)
-
+			path = fmt.Sprintf("%s%s", ThumbnailBasePath(userDirName, file), thumbnailAddedExtension)
 		}
 		src, err := utils.GetImageFromFilePath(path)
 		if err != nil {
@@ -67,7 +69,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Apply EXIF orientation for full-quality so the image displays correctly (e.g. phone photos).
 		if quality == "full" {
-			metadataPath := filepath.Join(userDirName, "Metadata", file+".json")
+			metadataPath := MetadataPath(userDirName, file)
 			orientation := GetOrientationFromMetadata(metadataPath)
 			src = applyEXIFOrientation(src, orientation)
 		}

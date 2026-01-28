@@ -36,10 +36,10 @@ func GetStreamHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	userName := r.URL.Query().Get("User")
+	userFromClient := r.URL.Query().Get("User")
 	deviceId := r.URL.Query().Get("DeviceId")
 	file := r.URL.Query().Get("File")
-	if userName == "" || deviceId == "" || file == "" {
+	if userFromClient == "" || deviceId == "" || file == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -48,7 +48,11 @@ func GetStreamHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+	userId := ResolveToUserId(userFromClient)
+	if userId == "" {
+		userId = userFromClient
+	}
+	userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
 	originalFilePath := filepath.Join(userDirName, file)
 	// Ensure resolved path is still under userDirName
 	absPath, err := filepath.Abs(originalFilePath)

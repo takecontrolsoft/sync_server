@@ -8,6 +8,8 @@ require (
 	github.com/go-errors/errors v1.5.1
 	github.com/stretchr/testify v1.9.0
 	github.com/takecontrolsoft/go_multi_log v1.0.3
+	golang.org/x/crypto v0.28.0
+	modernc.org/sqlite v1.34.1
 )
 
 require (

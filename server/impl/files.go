@@ -39,17 +39,25 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 			utils.RenderError(w, errors.Errorf("$Required json input {UserData: { User: '', DeviceId: ''}, Folder: ''}"), http.StatusBadRequest)
 			return
 		}
-		userName := result.UserData.User
+		userFromClient := result.UserData.User
 		deviceId := result.UserData.DeviceId
 		folder := result.Folder
-		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-		dirName := filepath.Join(userDirName, folder)
-		entries, err := os.ReadDir(dirName)
-		if err == nil {
-			for _, entry := range entries {
-				if !entry.IsDir() {
-					file := filepath.Join(folder, entry.Name())
-					files = append(files, file)
+		userId := ResolveToUserId(userFromClient)
+		if userId == "" {
+			userId = userFromClient
+		}
+		userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
+		if folder == TrashFolder {
+			files, _ = ListTrashFiles(userDirName)
+		} else {
+			dirName := filepath.Join(userDirName, folder)
+			entries, err := os.ReadDir(dirName)
+			if err == nil {
+				for _, entry := range entries {
+					if !entry.IsDir() {
+						file := filepath.Join(folder, entry.Name())
+						files = append(files, file)
+					}
 				}
 			}
 		}
@@ -64,23 +72,38 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DeleteAllHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		var result userData
-		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
-			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
-			return
-		}
-		userName := result.User
-		deviceId := result.DeviceId
-		userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+type deleteAllData struct {
+	User     string `json:"User"`
+	DeviceId string `json:"DeviceId"`
+	Password string `json:"Password"`
+}
 
-		err := os.RemoveAll(userDirName)
-		if err != nil {
-			utils.RenderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+func DeleteAllHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
+	var result deleteAllData
+	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+		utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: '' } and optionally Password or Authorization: Bearer <token>"), http.StatusBadRequest)
+		return
+	}
+	userFromClient := result.User
+	deviceId := result.DeviceId
+	if userFromClient == "" || deviceId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	userId := RequireAuthForDangerous(w, r, userFromClient, deviceId, result.Password)
+	if userId == "" {
+		return
+	}
+	userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
+	err := os.RemoveAll(userDirName)
+	if err != nil {
+		utils.RenderError(w, err, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }

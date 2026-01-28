@@ -19,6 +19,8 @@ package main
 import (
 	"flag"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/go_multi_log/logger/levels"
@@ -34,6 +36,8 @@ func main() {
 	var directory string
 	var logPath string
 	var logLevel int
+	var authDBPath string
+	var documentToTrash bool
 
 	portHelp := `TCP port number on witch the sync server can be reached. Defaults to 80.`
 	flag.IntVar(&port, "p", 8080, portHelp)
@@ -56,7 +60,15 @@ func main() {
     See package "go_multi_log": https://pkg.go.dev/github.com/takecontrolsoft/go_multi_log/logger/levels#LogLevel`
 	flag.IntVar(&logLevel, "n", 3, logLevelHelp)
 
+	authDBHelp := `Path to SQLite auth DB (users and sessions). If empty, uses SYNC_AUTH_DB env or auth.db next to the executable.`
+	flag.StringVar(&authDBPath, "a", "", authDBHelp)
+
+	documentToTrashHelp := `If set, document-like images (whiteboard, page, etc.) are moved to Trash after upload. Uses built-in heuristic; set SYNC_DOCUMENT_CLASSIFIER_PATH for Python classifier.`
+	flag.BoolVar(&documentToTrash, "document-to-trash", false, documentToTrashHelp)
+
 	flag.Parse()
+
+	config.InitBinDirectory()
 
 	if argCount := len(os.Args[1:]); argCount == 0 {
 		config.InitFromEnvVariables()
@@ -68,6 +80,19 @@ func main() {
 		config.UploadDirectory = directory
 		config.LogPath = logPath
 		config.LogLevel = levels.LogLevel(logLevel)
+		if config.AuthDBPath == "" && config.BinDirectory != "" {
+			config.AuthDBPath = filepath.Join(config.BinDirectory, "auth.db")
+		}
+		config.AdminUser = strings.TrimSpace(os.Getenv("SYNC_ADMIN_USER"))
+		config.AdminPassword = os.Getenv("SYNC_ADMIN_PASSWORD")
+		if documentToTrash {
+			config.DocumentToTrashEnabled = true
+		}
+		config.DocumentClassifierPath = strings.TrimSpace(os.Getenv("SYNC_DOCUMENT_CLASSIFIER_PATH"))
+	}
+
+	if authDBPath != "" {
+		config.AuthDBPath = strings.TrimSpace(authDBPath)
 	}
 
 	level := config.LogLevel
@@ -84,7 +109,6 @@ func main() {
 	}
 	logger.Info("Starting Sync server ...")
 
-	config.InitBinDirectory()
 	logger.InfoF(" - port = %d\n", config.PortNumber)
 	logger.InfoF(" - storage path = %s\n", config.UploadDirectory)
 	logger.InfoF(" - log path = %s\n", config.LogPath)

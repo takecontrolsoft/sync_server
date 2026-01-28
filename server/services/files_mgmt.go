@@ -22,6 +22,8 @@ import (
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	host "github.com/takecontrolsoft/sync_server/server/host"
 	"github.com/takecontrolsoft/sync_server/server/impl"
+	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/store"
 )
 
 type FilesManagementService struct {
@@ -30,8 +32,16 @@ type FilesManagementService struct {
 
 func (s FilesManagementService) Host() bool {
 	logger.Info("FilesManagementService hosted")
-
+	if config.AuthDBPath != "" {
+		if err := store.Open(config.AuthDBPath); err != nil {
+			logger.Error(err)
+		} else if err := store.BootstrapFromEnv(config.AdminUser, config.AdminPassword); err != nil {
+			logger.Error(err)
+		}
+	}
 	http.HandleFunc("/upload", impl.UploadHandler)
+	http.HandleFunc("/auth/login", impl.LoginHandler)
+	http.HandleFunc("/auth/register", impl.RegisterHandler)
 
 	//fs := http.FileServer(http.Dir(config.UploadDirectory))
 	//http.Handle("/", http.StripPrefix("/", fs))
@@ -39,6 +49,10 @@ func (s FilesManagementService) Host() bool {
 	http.HandleFunc("/folders", impl.GetFoldersHandler)
 
 	http.HandleFunc("/files", impl.GetFilesHandler)
+
+	http.HandleFunc("/move-to-trash", impl.MoveToTrashHandler)
+	http.HandleFunc("/restore", impl.RestoreHandler)
+	http.HandleFunc("/empty-trash", impl.EmptyTrashHandler)
 
 	http.HandleFunc("/delete-all", impl.DeleteAllHandler)
 

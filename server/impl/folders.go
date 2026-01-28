@@ -48,9 +48,13 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			utils.RenderError(w, errors.Errorf("$Required json input { User: '', DeviceId: ''}"), http.StatusBadRequest)
 			return
 		}
-		userName := result.User
+		userFromClient := result.User
 		deviceId := result.DeviceId
-		dirName := filepath.Join(config.UploadDirectory, userName, deviceId)
+		userId := ResolveToUserId(userFromClient)
+		if userId == "" {
+			userId = userFromClient
+		}
+		dirName := filepath.Join(config.UploadDirectory, userId, deviceId)
 		separator := string(os.PathSeparator)
 		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
 			if d != nil && d.IsDir() && deviceId != d.Name() {

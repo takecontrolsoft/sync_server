@@ -1,11 +1,13 @@
 FROM ubuntu:jammy
 
-#Install FFMPEG
+# Install FFMPEG and Python + PIL (for optional document classifier script)
 RUN apt-get update && \
-    apt-get install -y ffmpeg
+    apt-get install -y ffmpeg python3 python3-pil && \
+    apt-get clean
 
 RUN mkdir sync_server
 COPY /bin/sync_server /sync_server/sync_server
+COPY scripts/document_classifier.py /sync_server/scripts/document_classifier.py
 ENV LOG_LEVEL=3
 RUN chmod +x sync_server/sync_server
 

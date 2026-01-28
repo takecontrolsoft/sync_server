@@ -20,15 +20,18 @@ Golang server for uploading files and media files processing workflows.
 
 Base URL: `http://<host>:<port>` (e.g. `http://localhost:8080`).
 
-| Method | Endpoint      | Description |
-|--------|---------------|-------------|
-| **POST** | `/upload`   | Upload a file (multipart). Headers: `user` (JSON string), `date` (e.g. `2024-01`). Saves under `user/deviceId/` and creates thumbnails for images/videos. |
-| **POST** | `/folders`  | List folder structure (years and months) for a user and device. Body: `{ "User": "", "DeviceId": "" }`. Returns JSON array of `{ Year, Months[] }`. |
-| **POST** | `/files`    | List file paths in a folder. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Folder": "2024/01" }`. Returns JSON array of file path strings. |
-| **POST** | `/img`      | Get image or thumbnail as PNG bytes. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "File": "<path>", "Quality": "full" \| "" }`. Use `Quality: "full"` for original image; omit or empty for thumbnail. |
-| **GET**  | `/stream`   | Stream video/audio file with HTTP Range support (for playback/seek). Query: `User`, `DeviceId`, `File` (URL-encoded path, e.g. `2024/01/video.mp4`). |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| **POST** | `/upload` | Upload a file (multipart). Headers: `user` (JSON string), `date` (e.g. `2024-01`). Saves under `user/deviceId/` and creates thumbnails for images/videos. |
+| **POST** | `/folders` | List folder structure (years and months) for a user and device. Body: `{ "User": "", "DeviceId": "" }`. Returns JSON array of `{ Year, Months[] }`. |
+| **POST** | `/files` | List file paths in a folder. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Folder": "2024/01" }`. Returns JSON array of file path strings. Use `Folder: "Trash"` to list all files in Trash (paths like `Trash/2024/01/photo.jpg`). |
+| **POST** | `/img` | Get image or thumbnail as PNG bytes. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "File": "<path>", "Quality": "full" \| "" }`. Use `Quality: "full"` for original image; omit or empty for thumbnail. EXIF orientation is applied for correct display. |
+| **GET** | `/stream` | Stream video/audio file with HTTP Range support (for playback/seek). Query: `User`, `DeviceId`, `File` (URL-encoded path, e.g. `2024/01/video.mp4`). |
+| **POST** | `/move-to-trash` | Move files (and their thumbnails and metadata) to Trash. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Files": ["2024/01/photo.jpg", ...] }`. |
+| **POST** | `/restore` | Restore files from Trash to their original folder (by path). Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Files": ["Trash/2024/01/photo.jpg", ...] }`. |
+| **POST** | `/empty-trash` | Permanently delete all files in Trash (files, thumbnails, metadata) for the user and device. Body: `{ "User": "", "DeviceId": "" }`. |
 | **POST** | `/delete-all` | Delete all stored data for a user and device. Body: `{ "User": "", "DeviceId": "" }`. |
-| **GET**  | `/setup_info` | Placeholder; returns a short info message. |
+| **GET** | `/setup_info` | Placeholder; returns a short info message. |
 
 # prerequisites
 * MacOs
@@ -58,6 +61,22 @@ Base URL: `http://<host>:<port>` (e.g. `http://localhost:8080`).
   - ExifTool: [exiftool.org](https://exiftool.org/) — download the Windows executable (e.g. `exiftool-13.33_64.zip`), extract and copy `exiftool(-k).exe` as `exiftool.exe` next to `sync_server.exe`.
   - FFmpeg: e.g. [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases) — copy `ffmpeg.exe` (and optionally `ffprobe.exe`) from the archive’s `bin` folder next to `sync_server.exe`.
 
+## Auth (user names and passwords)
+
+To protect dangerous endpoints (**/delete-all**, **/empty-trash**) and use a **user ID** for folder paths (so usernames with invalid characters are safe and two users with the same display name don’t collide):
+
+1. Set **`SYNC_AUTH_DB`** to the path of a SQLite file (e.g. `./sync_auth.db`). The server will create it and store users (id, username, password hash) and session tokens there.
+2. Set **`SYNC_ADMIN_USER`** and **`SYNC_ADMIN_PASSWORD`** to bootstrap the first user (used only when the DB has no users).
+3. **POST /auth/login** – body `{ "User": "<username/email>", "Password": "" }` → returns `{ "Token": "...", "UserId": "<uuid>" }`. Use **UserId** (not the username) in upload, /folders, /files, /img, /stream so paths on disk are `UserId/DeviceId/...`. Use the token in `Authorization: Bearer <token>` for dangerous endpoints.
+4. **POST /auth/register** – body `{ "User": "", "Password": "" }` creates a new user and returns `{ "Token": "...", "UserId": "..." }`.
+5. When auth is enabled, **/delete-all** and **/empty-trash** require either `Authorization: Bearer <token>` or `Password` in the body. The **User** field in requests can be either username (email) or UserId; the server resolves to UserId for paths.
+6. **Folder layout on disk**: when auth is enabled, files are under `UserId/DeviceId/year/month/` (UserId is a UUID from the DB; username is only stored in the DB).
+
+If `SYNC_AUTH_DB` is not set, these endpoints do not require auth and the **User** value from the client is used as the folder name (legacy behaviour).
+
+## Optional: document-to-Trash detection
+
+Set **`SYNC_DOCUMENT_TO_TRASH=1`** (or `true` / `yes`) so that uploaded **images** that look like documents (whiteboard, notebook, textbook, book page) are automatically moved to Trash. The server uses a simple heuristic: high mean brightness and many light + dark pixels (typical for text on white background). This can have false positives (e.g. bright sky, white wall) and false negatives (dark pages). Disable the option if too many normal photos are moved.
 
 # Building and release
 Go to CONTRIBUTING.md for more instructions.

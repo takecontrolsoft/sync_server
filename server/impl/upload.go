@@ -1,4 +1,4 @@
-/* Copyright 2023 Take Control - Software & Infrastructure
+/* Copyright 2026 Take Control - Software & Infrastructure
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,13 +18,16 @@ package impl
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/flytam/filenamify"
 	"github.com/takecontrolsoft/go_multi_log/logger"
@@ -65,10 +68,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, err, http.StatusInternalServerError)
 		return
 	}
-	userName := string(name)
-	if len(userName) == 0 {
+	userFromClient := string(name)
+	if len(userFromClient) == 0 {
 		utils.RenderError(w, MissingUser, http.StatusBadRequest)
 		return
+	}
+	userId := ResolveToUserId(userFromClient)
+	if userId == "" {
+		userId = userFromClient
 	}
 	dateClassifier := r.Header.Get("date")
 	if len(dateClassifier) == 0 {
@@ -83,6 +90,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	year := dateArray[0]
 	month := dateArray[1]
+	// Clamp future or bogus year/month to current date so files don't end up in future-year folders
+	year, month = clampYearMonth(year, month)
 
 	_, params, err := mime.ParseMediaType(mp.Header.Get("Content-Disposition"))
 	if err != nil {
@@ -102,7 +111,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, err := createNewFile(mp, w, userName, filename, deviceId, year, month)
+	saveToTrash := strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Save-To-Trash")), "true")
+
+	f, err := createNewFile(mp, w, userId, filename, deviceId, year, month, saveToTrash)
 	if utils.RenderIfError(err, w, http.StatusInternalServerError) {
 		return
 	}
@@ -119,35 +130,53 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, FileSizeExceeded, http.StatusBadRequest)
 		return
 	}
-	var relPath = filepath.Join(year, month, filename)
+	var relPath string
+	if saveToTrash {
+		relPath = filepath.Join(TrashFolder, year, month, filename)
+	} else {
+		relPath = filepath.Join(year, month, filename)
+	}
 
 	go func() {
-		_, err = ExtractMetadata(userName, deviceId, relPath)
+		userDir := filepath.Join(config.UploadDirectory, userId, deviceId)
+		_, err = ExtractMetadata(userId, deviceId, relPath)
 		if err != nil {
 			logger.ErrorF("Creating metadata failed for file %s, %v", relPath, err)
 		}
 		switch mediatype {
 		case mediatypes.Video:
-			_, err = BuildVideoThumbnail(userName, deviceId, relPath)
+			_, err = BuildVideoThumbnail(userId, deviceId, relPath)
 		case mediatypes.Image:
-			_, err = BuildImageThumbnail(userName, deviceId, relPath)
+			_, err = BuildImageThumbnail(userId, deviceId, relPath)
 		case mediatypes.Audio:
-			_, err = BuildAudioThumbnail(userName, deviceId, relPath)
+			_, err = BuildAudioThumbnail(userId, deviceId, relPath)
 		default:
 			logger.Info("Unknown media type for thumbnail")
 		}
 		if err != nil {
 			logger.ErrorF("Creating thumbnail failed for file %s, %v", relPath, err)
 		}
+		// Optionally move document-like images to Trash (whiteboard, notebook, book pages)
+		if mediatype == mediatypes.Image && config.DocumentToTrashEnabled && !saveToTrash {
+			fullPath := filepath.Join(userDir, relPath)
+			if config.DocumentClassifierPath != "" {
+				RunDocumentClassifierAsync(fullPath, userDir, relPath)
+			} else if LooksLikeDocument(fullPath) {
+				MoveRelativePathToTrash(userDir, relPath)
+			}
+		}
 	}()
 
 }
 
 func createNewFile(mp *multipart.Part, w http.ResponseWriter,
-	userName string, filename string, deviceId string,
-	year string, month string) (*os.File, error) {
+	userId string, filename string, deviceId string,
+	year string, month string, saveToTrash bool) (*os.File, error) {
 
-	dirName := filepath.Join(config.UploadDirectory, userName, deviceId, year, month)
+	dirName := filepath.Join(config.UploadDirectory, userId, deviceId, year, month)
+	if saveToTrash {
+		dirName = filepath.Join(config.UploadDirectory, userId, deviceId, TrashFolder, year, month)
+	}
 	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -158,6 +187,18 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter,
 		return nil, err
 	}
 	return f, err
+}
+
+// clampYearMonth returns (year, month) strings; if year is in the future or before 2000,
+// returns current year and month so uploads don't create future-year or bogus folders.
+func clampYearMonth(year, month string) (string, string) {
+	yr, errY := strconv.Atoi(year)
+	mn, errM := strconv.Atoi(month)
+	now := time.Now()
+	if errY != nil || errM != nil || yr > now.Year() || yr < 2000 || mn < 1 || mn > 12 {
+		return fmt.Sprintf("%d", now.Year()), fmt.Sprintf("%d", int(now.Month()))
+	}
+	return year, month
 }
 
 func validateFileType(b *bufio.Reader, w http.ResponseWriter) (mediatypes.MediaType, error) {

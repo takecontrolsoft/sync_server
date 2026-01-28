@@ -1,4 +1,4 @@
-/* Copyright 2023 Take Control - Software & Infrastructure
+/* Copyright 2026 Take Control - Software & Infrastructure
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/go_multi_log/logger/levels"
@@ -67,6 +68,25 @@ var LogLevel levels.LogLevel
 // BinDirectory is the directory of the sync_server executable.
 // Place exiftool and ffmpeg executables here so the server finds them.
 var BinDirectory string
+
+// DocumentToTrashEnabled, when true, moves document-like images to Trash.
+// If DocumentClassifierPath is set, that Python/exe is run asynchronously after
+// upload; otherwise a built-in heuristic is used. Set via SYNC_DOCUMENT_TO_TRASH=1.
+var DocumentToTrashEnabled bool
+
+// DocumentClassifierPath is the path to a Python script (.py) or executable
+// that classifies an image as document vs photo. The server runs it asynchronously
+// after sync with the image path as the only argument; stdout "document" -> move to Trash.
+// Set via SYNC_DOCUMENT_CLASSIFIER_PATH. Example: scripts/document_classifier.py
+var DocumentClassifierPath string
+
+// AuthDBPath is the path to the SQLite auth DB for users and sessions.
+// Set via SYNC_AUTH_DB. If unset, defaults to auth.db next to the executable (BinDirectory).
+var AuthDBPath string
+
+// AdminUser and AdminPassword bootstrap the first user when the auth DB has no users.
+// Set via SYNC_ADMIN_USER and SYNC_ADMIN_PASSWORD.
+var AdminUser, AdminPassword string
 
 // InitBinDirectory sets BinDirectory to the executable's directory and
 // prepends it to PATH so exiftool and ffmpeg are found when next to sync_server.
@@ -143,6 +163,24 @@ func InitFromEnvVariables() {
 	PortNumber = p
 	LogPath = l
 	LogLevel = n
+	DocumentToTrashEnabled = false
+	if s, _ := os.LookupEnv("SYNC_DOCUMENT_TO_TRASH"); s == "1" || s == "true" || s == "yes" {
+		DocumentToTrashEnabled = true
+		logger.Info("Document-to-Trash detection enabled")
+	}
+	DocumentClassifierPath = strings.TrimSpace(os.Getenv("SYNC_DOCUMENT_CLASSIFIER_PATH"))
+	if DocumentToTrashEnabled && DocumentClassifierPath != "" {
+		logger.InfoF("Document classifier (async): %s", DocumentClassifierPath)
+	}
+	AuthDBPath = strings.TrimSpace(os.Getenv("SYNC_AUTH_DB"))
+	if AuthDBPath == "" && BinDirectory != "" {
+		AuthDBPath = filepath.Join(BinDirectory, "auth.db")
+	}
+	AdminUser = strings.TrimSpace(os.Getenv("SYNC_ADMIN_USER"))
+	AdminPassword = os.Getenv("SYNC_ADMIN_PASSWORD")
+	if AuthDBPath != "" {
+		logger.Info("Auth DB enabled (dangerous endpoints require login)")
+	}
 	logger.InfoF("Server port: %d", PortNumber)
 	logger.InfoF(fmt.Sprintf("Storage path: %s", UploadDirectory))
 	logger.InfoF(fmt.Sprintf("Log path: %s", LogPath))
