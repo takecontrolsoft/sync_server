@@ -81,12 +81,18 @@ jobs:
         with:
           name: sync_server${{ inputs.release}}-${{ matrix.os }}-${{ matrix.architecture }}
           path: build
-                  
+
+      - name: Prepare release asset (single binary to avoid duplicate names)
+        if: ${{ inputs.release_url != '' }}
+        run: |
+          mkdir -p release-asset
+          cp build/sync_server* release-asset/
+
       - name: Upload Release Asset
         if: ${{ inputs.release_url != '' }}
         uses: glentiki/xbin-release-action@v1.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ inputs.release_url }}
-          assets_path: ./build
+          assets_path: ./release-asset
