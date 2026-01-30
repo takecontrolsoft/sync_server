@@ -7,6 +7,7 @@
 * Admin APIs: POST `/regenerate-thumbnails`, POST `/clean-orphan-thumbnails`, POST `/run-document-detection`
 * Document detection: fallback to built-in heuristic when Python classifier is unset or fails; relaxed thresholds
 * Standalone build workflow (`.github/workflows/build.yml`) for CI
+* Tests for admin endpoints (regenerate-thumbnails, clean-orphan-thumbnails, run-document-detection)
 
 ### Fixes
 * Document detection returns `{"Moved": 0}` (200) when user directory is empty instead of 500
