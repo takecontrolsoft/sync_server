@@ -52,6 +52,8 @@ func GetStreamHandler(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		userId = userFromClient
 	}
+	// Normalize path: server expects forward slashes (Windows clients may send backslash).
+	file = strings.ReplaceAll(file, "\\", "/")
 	userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
 	originalFilePath := filepath.Join(userDirName, file)
 	// Ensure resolved path is still under userDirName
@@ -89,6 +91,7 @@ func GetStreamHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = f.Seek(0, 0) // reset after getContentType may have read from f
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Disposition", "inline") // play in place, do not download
 	rangeHeader := r.Header.Get("Range")
 	if rangeHeader == "" {
 		w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
