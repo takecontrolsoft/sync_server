@@ -1,5 +1,17 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+## 1.0.7 Release notes (2026-01-29)
+
+### Enhancements
+* Auth: user folders on disk use lowercase email; login/register return UserId for paths
+* Admin APIs: POST `/regenerate-thumbnails`, POST `/clean-orphan-thumbnails`, POST `/run-document-detection`
+* Document detection: fallback to built-in heuristic when Python classifier is unset or fails; relaxed thresholds
+* Standalone build workflow (`.github/workflows/build.yml`) for CI
+
+### Fixes
+* Document detection returns `{"Moved": 0}` (200) when user directory is empty instead of 500
+* `IsImagePath` is case-insensitive for extensions (e.g. .JPG)
+
 ## 1.0.6 Release notes (2025-07-27)
 
 ### Enhancements
