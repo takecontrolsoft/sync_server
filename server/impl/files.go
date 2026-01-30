@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/sync_server/server/config"
@@ -40,23 +41,54 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		userFromClient := result.UserData.User
-		deviceId := result.UserData.DeviceId
+		deviceId := strings.TrimSpace(result.UserData.DeviceId)
 		folder := result.Folder
 		userId := ResolveToUserId(userFromClient)
 		if userId == "" {
 			userId = userFromClient
 		}
-		userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
-		if folder == TrashFolder {
-			files, _ = ListTrashFiles(userDirName)
+		userDir := filepath.Join(config.UploadDirectory, userId)
+		if deviceId == "" {
+			// All devices for this account: list files from each device with "deviceId/path" prefix
+			entries, errRead := os.ReadDir(userDir)
+			if errRead == nil {
+				for _, e := range entries {
+					if !e.IsDir() {
+						continue
+					}
+					devId := e.Name()
+					userDirName := filepath.Join(userDir, devId)
+					if folder == TrashFolder {
+						trashList, _ := ListTrashFiles(userDirName)
+						for _, p := range trashList {
+							files = append(files, devId+"/"+p)
+						}
+					} else {
+						dirName := filepath.Join(userDirName, folder)
+						dirEntries, err := os.ReadDir(dirName)
+						if err == nil {
+							for _, entry := range dirEntries {
+								if !entry.IsDir() {
+									files = append(files, devId+"/"+filepath.Join(folder, entry.Name()))
+								}
+							}
+						}
+					}
+				}
+			}
 		} else {
-			dirName := filepath.Join(userDirName, folder)
-			entries, err := os.ReadDir(dirName)
-			if err == nil {
-				for _, entry := range entries {
-					if !entry.IsDir() {
-						file := filepath.Join(folder, entry.Name())
-						files = append(files, file)
+			userDirName := filepath.Join(userDir, deviceId)
+			if folder == TrashFolder {
+				files, _ = ListTrashFiles(userDirName)
+			} else {
+				dirName := filepath.Join(userDirName, folder)
+				entries, err := os.ReadDir(dirName)
+				if err == nil {
+					for _, entry := range entries {
+						if !entry.IsDir() {
+							file := filepath.Join(folder, entry.Name())
+							files = append(files, file)
+						}
 					}
 				}
 			}

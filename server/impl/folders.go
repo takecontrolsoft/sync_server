@@ -49,37 +49,87 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		userFromClient := result.User
-		deviceId := result.DeviceId
+		deviceId := strings.TrimSpace(result.DeviceId)
 		userId := ResolveToUserId(userFromClient)
 		if userId == "" {
 			userId = userFromClient
 		}
-		dirName := filepath.Join(config.UploadDirectory, userId, deviceId)
+		userDir := filepath.Join(config.UploadDirectory, userId)
 		separator := string(os.PathSeparator)
-		err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
-			if d != nil && d.IsDir() && deviceId != d.Name() {
-				fld := strings.Replace(strings.TrimRight(path, separator), dirName, "", 1)
-				fld = strings.TrimLeft(fld, separator)
-				logger.InfoF("File path %s", path)
-				logger.InfoF("File path ends with %s", fld)
-				if len(fld) == 4 {
-					folders = append(folders, folder{Year: fld, Months: []string{}})
-				} else {
-					yr := fld[0:4]
-					for i := range folders {
-						foundYear := folders[i]
-						if foundYear.Year == yr {
-							mnts := foundYear.Months
-							mnts = append(mnts, fld)
-							folders[i].Months = mnts
+
+		if deviceId == "" {
+			// All devices for this account: list device dirs, walk each, merge folders
+			entries, errRead := os.ReadDir(userDir)
+			if errRead != nil {
+				logger.ErrorF("Reading user dir %s failed %v", userDir, errRead.Error())
+			} else {
+				yearMonths := make(map[string]map[string]bool) // year -> set of month strings
+				for _, e := range entries {
+					if !e.IsDir() {
+						continue
+					}
+					devId := e.Name()
+					dirName := filepath.Join(userDir, devId)
+					_ = filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
+						if err != nil || d == nil || !d.IsDir() {
+							return err
+						}
+						rel := strings.TrimLeft(strings.TrimPrefix(path, dirName), separator)
+						if rel == "" || rel == devId {
+							return nil
+						}
+						if len(rel) == 4 {
+							if yearMonths[rel] == nil {
+								yearMonths[rel] = make(map[string]bool)
+							}
+							return nil
+						}
+						if len(rel) > 4 {
+							yr := rel[0:4]
+							if yearMonths[yr] == nil {
+								yearMonths[yr] = make(map[string]bool)
+							}
+							yearMonths[yr][rel] = true
+						}
+						return nil
+					})
+				}
+				for yr, monthsSet := range yearMonths {
+					months := make([]string, 0, len(monthsSet))
+					for m := range monthsSet {
+						months = append(months, m)
+					}
+					folders = append(folders, folder{Year: yr, Months: months})
+				}
+			}
+		} else {
+			dirName := filepath.Join(userDir, deviceId)
+			err := filepath.WalkDir(dirName, func(path string, d fs.DirEntry, err error) error {
+				if d != nil && d.IsDir() && deviceId != d.Name() {
+					fld := strings.Replace(strings.TrimRight(path, separator), dirName, "", 1)
+					fld = strings.TrimLeft(fld, separator)
+					logger.InfoF("File path %s", path)
+					logger.InfoF("File path ends with %s", fld)
+					if len(fld) == 4 {
+						folders = append(folders, folder{Year: fld, Months: []string{}})
+					} else {
+						yr := fld[0:4]
+						for i := range folders {
+							foundYear := folders[i]
+							if foundYear.Year == yr {
+								mnts := foundYear.Months
+								mnts = append(mnts, fld)
+								folders[i].Months = mnts
+								break
+							}
 						}
 					}
 				}
+				return err
+			})
+			if err != nil {
+				logger.ErrorF("Reading folder %s failed %v", dirName, err.Error())
 			}
-			return err
-		})
-		if err != nil {
-			logger.ErrorF("Reading folder %s failed %v", dirName, err.Error())
 		}
 
 		w.Header().Set("Content-Type", "application/json")
