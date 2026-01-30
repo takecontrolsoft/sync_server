@@ -1,5 +1,11 @@
 <img src="https://takecontrolsoft.eu/assets/img/takecontrolsoft-logo-green.png" alt="Sync Device by Take Control - software & infrastructure" width="25%">
 
+## 1.0.8 Release notes (2026-01-29)
+
+### Fixes
+* Streaming: use `io.Copy` instead of `WriteTo` for full-file responses (fixes build on Go 1.22+)
+* CI: Docker workflow no longer uploads bake-meta/digest artifacts; digests passed via job outputs; clean-artifacts job removed
+
 ## 1.0.7 Release notes (2026-01-29)
 
 ### Enhancements
