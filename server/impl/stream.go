@@ -96,7 +96,7 @@ func GetStreamHandler(w http.ResponseWriter, r *http.Request) {
 	if rangeHeader == "" {
 		w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
 		w.WriteHeader(http.StatusOK)
-		_, _ = f.WriteTo(w)
+		_, _ = io.Copy(w, f)
 		return
 	}
 	// Parse "bytes=start-end"
