@@ -1,0 +1,1 @@
+.\sync_server.exe -d "C:\mobisync\data" -p 8080 -l "C:\mobisync\logs" -n 3 -a "C:\mobisync\auth.db" -document-to-trash

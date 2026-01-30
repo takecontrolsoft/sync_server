@@ -18,10 +18,16 @@ package impl
 import (
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"image/png"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/disintegration/imaging"
 	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
@@ -50,32 +56,86 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		quality := result.Quality
 		userDirName := filepath.Join(config.UploadDirectory, userId, deviceId)
 		originalFilePath := filepath.Join(userDirName, file)
-		path := ""
 		if quality == "full" {
-			path = originalFilePath
-		} else {
-			thumbnailAddedExtension, err := utils.GetThumbnailFileAddedExtension(originalFilePath)
-			if err != nil {
+			// Serve original file as-is — no decode/re-encode, no quality change.
+			if err := serveOriginalFile(w, originalFilePath, file); err != nil {
 				utils.RenderError(w, err, http.StatusInternalServerError)
-				return
 			}
-			path = fmt.Sprintf("%s%s", ThumbnailBasePath(userDirName, file), thumbnailAddedExtension)
+			return
 		}
+
+		path := ""
+		thumbnailAddedExtension, err := utils.GetThumbnailFileAddedExtension(originalFilePath)
+		if err != nil {
+			utils.RenderError(w, err, http.StatusInternalServerError)
+			return
+		}
+		path = fmt.Sprintf("%s%s", ThumbnailBasePath(userDirName, file), thumbnailAddedExtension)
 		src, err := utils.GetImageFromFilePath(path)
 		if err != nil {
 			utils.RenderError(w, err, http.StatusInternalServerError)
 			return
 		}
 
-		// Apply EXIF orientation for full-quality so the image displays correctly (e.g. phone photos).
-		if quality == "full" {
+		if quality == "high" {
 			metadataPath := MetadataPath(userDirName, file)
 			orientation := GetOrientationFromMetadata(metadataPath)
 			src = applyEXIFOrientation(src, orientation)
+			src = resizeMaxLongEdge(src, 1920)
+			w.Header().Set("Content-Type", "image/jpeg")
+			w.WriteHeader(http.StatusOK)
+			jpeg.Encode(w, src, &jpeg.Options{Quality: 85})
+			return
 		}
 
+		// Thumbnail: PNG
 		w.Header().Set("Content-Type", "image/png")
 		w.WriteHeader(http.StatusOK)
 		png.Encode(w, src)
 	}
+}
+
+// serveOriginalFile streams the file unchanged; Content-Type from extension.
+func serveOriginalFile(w http.ResponseWriter, filePath, file string) error {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	contentType := contentTypeFromFileName(file)
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, err = io.Copy(w, f)
+	return err
+}
+
+func contentTypeFromFileName(path string) string {
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	case ".heic":
+		return "image/heic"
+	default:
+		return "application/octet-stream"
+	}
+}
+
+// resizeMaxLongEdge resizes the image so the longest edge is at most maxPx; aspect ratio preserved.
+func resizeMaxLongEdge(src image.Image, maxPx int) image.Image {
+	b := src.Bounds()
+	w, h := b.Dx(), b.Dy()
+	if w <= maxPx && h <= maxPx {
+		return src
+	}
+	if w >= h {
+		return imaging.Resize(src, maxPx, 0, imaging.Lanczos)
+	}
+	return imaging.Resize(src, 0, maxPx, imaging.Lanczos)
 }
