@@ -82,13 +82,21 @@ Set **`SYNC_DOCUMENT_TO_TRASH=1`** (or `true` / `yes`) so that uploaded **images
 
 ## Local release build
 
-From the repo root:
+From the repo root (folder where `main.go` is).
 
+**Windows (PowerShell):**
+```powershell
+cd c:\TakeControl\repos\sync_server
+mkdir bin -Force
+go build -ldflags "-s -w" -trimpath -o sync_server.exe .
+
+```
+If the exe still doesn't appear, try with single quotes: `go build '-ldflags=-s -w' -trimpath -o sync_server.exe .`
+
+**Linux / macOS:**
 ```bash
 go build -ldflags="-s -w" -trimpath -o bin/sync_server .
 ```
-
-On Windows the executable is `bin/sync_server.exe`.
 
 ## GitHub release (CI)
 
