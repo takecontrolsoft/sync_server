@@ -18,17 +18,12 @@ RUN chmod g+s data
 RUN mkdir data/photos
 RUN mkdir data/logs
 
-#Install Image-ExifTool-13.33
+# Install Image-ExifTool (from SourceForge; exiftool.org 13.33 returns 404)
 WORKDIR /opt
-ADD https://exiftool.org/Image-ExifTool-13.33.tar.gz /opt/
-RUN gzip -dc Image-ExifTool-13.33.tar.gz | tar -xf -
-RUN mv Image-ExifTool-13.33 exiftool
-RUN cd exiftool
-RUN ln -s "${PWD}/exiftool" /usr/local/bin/
-RUN chmod +x /usr/local/bin/exiftool
+ADD https://downloads.sourceforge.net/project/exiftool/Image-ExifTool-13.45.tar.gz /opt/
+RUN gzip -dc Image-ExifTool-13.45.tar.gz | tar -xf - && mv Image-ExifTool-13.45 exiftool
+RUN ln -sf /opt/exiftool/exiftool /usr/local/bin/exiftool && chmod +x /usr/local/bin/exiftool
 ENV PATH="$PATH:/usr/local/bin"
-RUN echo "export PATH=$PATH:/usr/local/bin" >> ~/.profile
-RUN cd /
 
 WORKDIR /
 RUN chmod +x /sync_server/sync_server
