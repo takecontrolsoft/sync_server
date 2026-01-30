@@ -79,4 +79,19 @@ If `SYNC_AUTH_DB` is not set, the **User** value from the client is used as the 
 Set **`SYNC_DOCUMENT_TO_TRASH=1`** (or `true` / `yes`) so that uploaded **images** that look like documents (whiteboard, notebook, textbook, book page) are automatically moved to Trash. The server uses a simple heuristic: high mean brightness and many light + dark pixels (typical for text on white background). This can have false positives (e.g. bright sky, white wall) and false negatives (dark pages). Disable the option if too many normal photos are moved.
 
 # Building and release
-Go to CONTRIBUTING.md for more instructions.
+
+## Local release build
+
+From the repo root:
+
+```bash
+go build -ldflags="-s -w" -trimpath -o bin/sync_server .
+```
+
+On Windows the executable is `bin/sync_server.exe`.
+
+## GitHub release (CI)
+
+1. Create and push a version tag: `git tag v1.0.0` then `git push --tags`
+2. The [Release workflow](.github/workflows/release.yml) runs: tests → creates GitHub Release → builds artifacts for Linux, Windows, macOS (amd64/arm64) and uploads them to the release
+3. See CONTRIBUTING.md for more (Docker, run examples).

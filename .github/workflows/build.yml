@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Required by server at runtime; use a temp path for tests
-      SYNC_STORAGE_PATH: ${{ runner.temp }}/sync_storage
+      SYNC_STORAGE_PATH: /tmp/sync_storage
       SYNC_SERVER_PORT: "8080"
-      LOG_PATH: ${{ runner.temp }}/sync_logs
+      LOG_PATH: /tmp/sync_logs
 
     steps:
       - name: Checkout
