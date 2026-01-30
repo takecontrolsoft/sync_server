@@ -136,31 +136,37 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		relPath = filepath.Join(year, month, filename)
 	}
+	// Use forward slashes so ThumbnailBasePath/MetadataPath recognize Trash paths on all OSes.
+	relPath = filepath.ToSlash(relPath)
 
 	go func() {
 		userDir := filepath.Join(config.UploadDirectory, userId, deviceId)
-		_, err = ExtractMetadata(userId, deviceId, relPath)
-		if err != nil {
-			logger.ErrorF("Creating metadata failed for file %s, %v", relPath, err)
+		// 1. Wait for metadata creation to complete.
+		_, metaErr := ExtractMetadata(userId, deviceId, relPath)
+		if metaErr != nil {
+			logger.ErrorF("Creating metadata failed for file %s, %v", relPath, metaErr)
 		}
+		// 2. Wait for thumbnail creation to complete.
+		var thumbErr error
 		switch mediatype {
 		case mediatypes.Video:
-			_, err = BuildVideoThumbnail(userId, deviceId, relPath)
+			_, thumbErr = BuildVideoThumbnail(userId, deviceId, relPath)
 		case mediatypes.Image:
-			_, err = BuildImageThumbnail(userId, deviceId, relPath)
+			_, thumbErr = BuildImageThumbnail(userId, deviceId, relPath)
 		case mediatypes.Audio:
-			_, err = BuildAudioThumbnail(userId, deviceId, relPath)
+			_, thumbErr = BuildAudioThumbnail(userId, deviceId, relPath)
 		default:
 			logger.Info("Unknown media type for thumbnail")
 		}
-		if err != nil {
-			logger.ErrorF("Creating thumbnail failed for file %s, %v", relPath, err)
+		if thumbErr != nil {
+			logger.ErrorF("Creating thumbnail failed for file %s, %v", relPath, thumbErr)
 		}
-		// Optionally move document-like images to Trash (whiteboard, notebook, book pages)
-		if mediatype == mediatypes.Image && config.DocumentToTrashEnabled && !saveToTrash {
+		// 3. Run document-to-trash detection only after both metadata and thumbnail have completed,
+		// so the file, metadata, and thumbnail are all moved to Trash/ together.
+		if metaErr == nil && thumbErr == nil && mediatype == mediatypes.Image && config.DocumentToTrashEnabled && !saveToTrash {
 			fullPath := filepath.Join(userDir, relPath)
 			if config.DocumentClassifierPath != "" {
-				RunDocumentClassifierAsync(fullPath, userDir, relPath)
+				RunDocumentClassifierSync(fullPath, userDir, relPath)
 			} else if LooksLikeDocument(fullPath) {
 				MoveRelativePathToTrash(userDir, relPath)
 			}

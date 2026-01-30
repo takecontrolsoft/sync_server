@@ -46,9 +46,11 @@ func GetFrameFromVideo(inFileName string, frameNum int) io.Reader {
 }
 
 func BuildVideoThumbnail(userName string, deviceId string, file string) (string, error) {
-
+	// Normalize so Trash paths use forward slashes and ThumbnailBasePath puts thumb under Trash/Thumbnails.
+	file = filepath.ToSlash(file)
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-	thumbnailPath := filepath.Join(userDirName, "Thumbnails", fmt.Sprintf("%s.jpeg", file))
+	// Use ThumbnailBasePath so uploads-to-Trash and /img thumbnail lookup use the same path.
+	thumbnailPath := ThumbnailBasePath(userDirName, file) + ".jpeg"
 	filePath := filepath.Join(userDirName, file)
 
 	reader := GetFrameFromVideo(filePath, 5)
@@ -101,8 +103,11 @@ func applyEXIFOrientation(src image.Image, orientation int) image.Image {
 }
 
 func BuildImageThumbnail(userName string, deviceId string, file string) (string, error) {
+	// Normalize so Trash paths use forward slashes and ThumbnailBasePath puts thumb under Trash/Thumbnails.
+	file = filepath.ToSlash(file)
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-	thumbnailPath := filepath.Join(userDirName, "Thumbnails", file)
+	// Use ThumbnailBasePath so uploads-to-Trash and /img thumbnail lookup use the same path.
+	thumbnailPath := ThumbnailBasePath(userDirName, file)
 	filePath := filepath.Join(userDirName, file)
 
 	src, err := utils.GetImageFromFilePath(filePath)
@@ -111,7 +116,7 @@ func BuildImageThumbnail(userName string, deviceId string, file string) (string,
 	}
 
 	// Apply EXIF orientation so thumbnail is displayed correctly (e.g. phone photos rotated 90°).
-	metadataPath := filepath.Join(userDirName, "Metadata", file+".json")
+	metadataPath := MetadataPath(userDirName, file)
 	orientation := GetOrientationFromMetadata(metadataPath)
 	src = applyEXIFOrientation(src, orientation)
 

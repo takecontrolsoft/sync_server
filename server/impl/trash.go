@@ -33,10 +33,15 @@ const TrashFolder = "Trash"
 const trashPrefix = TrashFolder + "/"
 
 // ThumbnailBasePath returns the full path to the thumbnail file (without .jpeg extension for videos).
-// For files in Trash, thumbnails live under Trash/Thumbnails/; otherwise under Thumbnails/.
+// For files in Trash, thumbnails live under Trash/Thumbnails/ (not Thumbnails/Trash/); otherwise under Thumbnails/.
 func ThumbnailBasePath(userDir, file string) string {
-	if strings.HasPrefix(file, trashPrefix) {
-		rest := strings.TrimPrefix(file, trashPrefix)
+	// Normalize to forward slashes so Trash is detected on all OSes (Windows uses backslash).
+	file = filepath.ToSlash(file)
+	file = strings.TrimSpace(file)
+	// First path segment is "Trash" (case-insensitive) -> store under Trash/Thumbnails, not Thumbnails/Trash.
+	parts := strings.Split(file, "/")
+	if len(parts) > 0 && strings.EqualFold(parts[0], TrashFolder) {
+		rest := strings.Join(parts[1:], "/")
 		return filepath.Join(userDir, TrashFolder, "Thumbnails", rest)
 	}
 	return filepath.Join(userDir, "Thumbnails", file)
@@ -45,8 +50,11 @@ func ThumbnailBasePath(userDir, file string) string {
 // MetadataPath returns the full path to the metadata JSON file.
 // For files in Trash, metadata lives under Trash/Metadata/; otherwise under Metadata/.
 func MetadataPath(userDir, file string) string {
-	if strings.HasPrefix(file, trashPrefix) {
-		rest := strings.TrimPrefix(file, trashPrefix)
+	file = filepath.ToSlash(file)
+	file = strings.TrimSpace(file)
+	parts := strings.Split(file, "/")
+	if len(parts) > 0 && strings.EqualFold(parts[0], TrashFolder) {
+		rest := strings.Join(parts[1:], "/")
 		return filepath.Join(userDir, TrashFolder, "Metadata", rest+".json")
 	}
 	return filepath.Join(userDir, "Metadata", file+".json")

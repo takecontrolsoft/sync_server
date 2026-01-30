@@ -17,7 +17,6 @@ package impl
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -28,7 +27,8 @@ import (
 func ExtractMetadata(userName string, deviceId string, file string) (string, error) {
 
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
-	metadataPath := filepath.Join(userDirName, "Metadata", fmt.Sprintf("%s.json", file))
+	// Use MetadataPath so Trash files get metadata under Trash/Metadata/, not Metadata/Trash/.
+	metadataPath := MetadataPath(userDirName, file)
 	filePath := filepath.Join(userDirName, file)
 
 	var et *exiftool.Exiftool
