@@ -158,6 +158,19 @@ func GetUserIdByUsername(username string) string {
 	return id
 }
 
+// GetUsernameByUserId returns the username (email) for the given userId, or empty string if not found.
+func GetUsernameByUserId(userId string) string {
+	if db == nil || userId == "" {
+		return ""
+	}
+	var username string
+	err := db.QueryRow(`SELECT username FROM users WHERE id = ?`, userId).Scan(&username)
+	if err == sql.ErrNoRows || err != nil {
+		return ""
+	}
+	return username
+}
+
 // UserIdExists returns true if the id exists in users.
 func UserIdExists(id string) bool {
 	if db == nil || id == "" {

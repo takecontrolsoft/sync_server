@@ -53,6 +53,10 @@ func (s FilesManagementService) Host() bool {
 	http.HandleFunc("/move-to-trash", impl.MoveToTrashHandler)
 	http.HandleFunc("/restore", impl.RestoreHandler)
 
+	http.HandleFunc("/regenerate-thumbnails", impl.RegenerateThumbnailsHandler)
+	http.HandleFunc("/clean-orphan-thumbnails", impl.CleanOrphanThumbnailsHandler)
+	http.HandleFunc("/run-document-detection", impl.RunDocumentDetectionHandler)
+
 	return true
 }
 

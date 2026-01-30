@@ -18,6 +18,7 @@ package impl
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/store"
@@ -100,15 +101,20 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(loginResponse{Token: token, UserId: userId})
 }
 
-// ResolveToUserId returns the disk path user id. When auth DB is set: User in requests can be
-// username (email) or userId; returns userId for path. When auth DB is not set: returns user as-is.
+// ResolveToUserId returns the folder name used for storage path (UploadDirectory/<this>/deviceId).
+// Always returns normalized (lowercase) email so the main folder is the user's email.
+// When auth DB is set: User in requests can be username (email) or userId; we resolve to email for path.
+// When auth DB is not set: returns lowercase user as-is.
 func ResolveToUserId(user string) string {
-	if config.AuthDBPath == "" || user == "" {
-		return user
+	if user == "" {
+		return ""
 	}
-	if store.UserIdExists(user) {
-		return user
+	if config.AuthDBPath != "" && store.UserIdExists(user) {
+		email := store.GetUsernameByUserId(user)
+		if email != "" {
+			return strings.ToLower(email)
+		}
 	}
-	return store.GetUserIdByUsername(user)
+	return strings.ToLower(user)
 }
 

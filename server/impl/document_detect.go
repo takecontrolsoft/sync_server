@@ -17,6 +17,7 @@ package impl
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/disintegration/imaging"
 	"github.com/takecontrolsoft/sync_server/server/utils"
@@ -61,18 +62,19 @@ func LooksLikeDocument(fullPath string) bool {
 	}
 	mean := int(sum / uint64(pixels))
 	// Document-like: mostly light background (mean high) and bimodal (light + dark pixels)
-	// e.g. white page with black text, or notebook with lines
+	// e.g. white page with black text, or notebook with lines. Thresholds tuned to catch more docs.
 	lightDarkRatio := float64(light+dark) / float64(pixels)
-	return mean >= 140 && lightDarkRatio >= 0.35
+	return mean >= 120 && lightDarkRatio >= 0.28
 }
 
-// IsImagePath returns true if the file extension is a common image type.
+// IsImagePath returns true if the file extension is a common image type (case-insensitive).
 func IsImagePath(path string) bool {
-	ext := filepath.Ext(path)
+	ext := strings.ToLower(filepath.Ext(path))
 	if ext == "" {
 		return false
 	}
-	switch ext[1:] {
+	ext = ext[1:] // drop leading dot
+	switch ext {
 	case "jpg", "jpeg", "png", "gif", "bmp", "webp", "heic":
 		return true
 	}

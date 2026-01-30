@@ -41,17 +41,25 @@ func RunDocumentClassifierAsync(fullPath, userDir, relPath string) {
 // RunDocumentClassifierSync runs the classifier and, if stdout contains "document", moves the file to Trash.
 // Call this after thumbnail creation so the thumbnail is moved to Trash/Thumbnails together with the file.
 func RunDocumentClassifierSync(fullPath, userDir, relPath string) {
+	RunDocumentClassifierSyncReturnsMoved(fullPath, userDir, relPath)
+}
+
+// RunDocumentClassifierSyncReturnsMoved runs the classifier and, if stdout contains "document", moves the file to Trash.
+// Returns true if the file was moved to Trash.
+func RunDocumentClassifierSyncReturnsMoved(fullPath, userDir, relPath string) bool {
 	if config.DocumentClassifierPath == "" {
-		return
+		return false
 	}
 	out, err := runClassifier(fullPath)
 	if err != nil {
 		logger.ErrorF("Document classifier failed for %s: %v", fullPath, err)
-		return
+		return false
 	}
 	if strings.Contains(strings.ToLower(string(out)), "document") {
 		MoveRelativePathToTrash(userDir, relPath)
+		return true
 	}
+	return false
 }
 
 // runClassifier runs the script or exe with image path as single arg; returns stdout.

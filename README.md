@@ -29,6 +29,9 @@ Base URL: `http://<host>:<port>` (e.g. `http://localhost:8080`).
 | **GET** | `/stream` | Stream video/audio file with HTTP Range support (for playback/seek). Query: `User`, `DeviceId`, `File` (URL-encoded path, e.g. `2024/01/video.mp4`). |
 | **POST** | `/move-to-trash` | Move files (and their thumbnails and metadata) to Trash. Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Files": ["2024/01/photo.jpg", ...] }`. |
 | **POST** | `/restore` | Restore files from Trash to their original folder (by path). Body: `{ "UserData": { "User": "", "DeviceId": "" }, "Files": ["Trash/2024/01/photo.jpg", ...] }`. |
+| **POST** | `/regenerate-thumbnails` | Regenerate thumbnails for all media files (excluding Trash). Body: `{ "UserData": { "User": "", "DeviceId": "" } }`. Returns `{ "Regenerated": N }`. |
+| **POST** | `/clean-orphan-thumbnails` | Delete thumbnail and metadata files that have no corresponding source file. Body: `{ "UserData": { "User": "", "DeviceId": "" } }`. Returns `{ "Removed": N }`. |
+| **POST** | `/run-document-detection` | Run document detection (Python classifier if `SYNC_DOCUMENT_CLASSIFIER_PATH` is set, else built-in heuristic) on existing image files; move detected documents to Trash. Body: `{ "UserData": { "User": "", "DeviceId": "" } }`. Returns `{ "Moved": N }`. |
 | **GET** | `/setup_info` | Placeholder; returns a short info message. |
 
 # prerequisites
