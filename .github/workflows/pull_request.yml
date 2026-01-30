@@ -29,16 +29,16 @@ jobs:
     secrets: inherit
     with:
       os: '["linux"]'
-      architectures: '["amd64"]'
+      architectures: '["amd64", "arm64"]'
       go_version: ${{ vars.GO_VERSION }}
-  
+
   build-docker-images:
     name: Docker image
     needs: build-artifacts
     secrets: inherit
     with:
       os: '["linux"]'
-      architectures: '["amd64"]' 
+      architectures: '["amd64", "arm64"]'
     uses: ./.github/workflows/w_docker.yml
 
   
