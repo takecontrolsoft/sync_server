@@ -28,15 +28,15 @@ jobs:
     - name: Set Up Exiftool
       shell: powershell
       run: |
-          New-Item -Path "c:\" -Name "exiftool" -ItemType "directory"
+          New-Item -Path "c:\" -Name "exiftool" -ItemType "directory" -Force
           $dest = "c:\exiftool\exiftool-13.47_64.zip"
           $url = "https://downloads.sourceforge.net/project/exiftool/exiftool-13.47_64.zip"
-          Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing
+          curl.exe -sfL -o $dest $url
           Expand-Archive -Path $dest -DestinationPath "c:\exiftool" -Force
           Rename-Item -path "c:\exiftool\exiftool-13.47_64" -NewName "bin"
           Rename-Item -Path "c:\exiftool\bin\exiftool(-k).exe" -NewName "exiftool.exe"
           Remove-Item $dest
-          $Env:PATH += ";c:\exiftool\bin"
+          $env:PATH = "c:\exiftool\bin;" + $env:PATH
         #Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\exiftool\bin", "Machine")
 
     - name: Build
