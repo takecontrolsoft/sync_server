@@ -63,6 +63,20 @@ func RunDocumentClassifierSyncReturnsMoved(fullPath, userDir, relPath string) bo
 	return false
 }
 
+// IsDocumentByClassifier checks if a file is a document using the configured classifier.
+// Returns true if it's a document, false otherwise. Does NOT move the file.
+func IsDocumentByClassifier(fullPath string) bool {
+	if config.DocumentClassifierPath == "" {
+		return false
+	}
+	out, err := runClassifier(fullPath)
+	if err != nil {
+		logger.ErrorF("Document classifier failed for %s: %v", fullPath, err)
+		return false
+	}
+	return strings.Contains(strings.ToLower(string(out)), "document")
+}
+
 // runClassifier runs the script or exe with image path as single arg; returns stdout.
 func runClassifier(imagePath string) ([]byte, error) {
 	path := strings.TrimSpace(config.DocumentClassifierPath)

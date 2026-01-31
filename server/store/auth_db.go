@@ -21,6 +21,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -80,13 +81,22 @@ func initSchema() error {
 	return err
 }
 
-// CreateUser adds a user with the given password (hashed with bcrypt). Returns userId (UUID). If user already exists, returns their id and nil.
+// ErrWrongPassword is returned when the user exists but the password is wrong.
+var ErrWrongPassword = errors.New("wrong password for existing user")
+
+// CreateUser adds a user with the given password (hashed with bcrypt). Returns userId (UUID).
+// If user already exists AND password matches, returns their id (allows adding new device).
+// If user exists but password is wrong, returns ErrWrongPassword.
 func CreateUser(username, password string) (userId string, err error) {
 	if db == nil || username == "" || password == "" {
 		return "", nil
 	}
 	if id := GetUserIdByUsername(username); id != "" {
-		return id, nil
+		// User exists - verify password before allowing "re-registration"
+		if VerifyUser(username, password) {
+			return id, nil
+		}
+		return "", ErrWrongPassword
 	}
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {

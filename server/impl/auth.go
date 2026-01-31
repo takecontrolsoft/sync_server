@@ -17,6 +17,7 @@ package impl
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/takecontrolsoft/sync_server/server/store"
@@ -73,7 +74,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(loginResponse{Token: token, UserId: userId})
 }
 
-// RegisterHandler creates a user. POST body: { "User": "", "Password": "" }.
+// RegisterHandler creates a user or re-authenticates existing user (for new device).
+// POST body: { "User": "", "Password": "" }.
+// If user exists and password matches, returns token (allows adding new device).
+// If user exists but password is wrong, returns 401.
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -89,6 +93,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userId, err := store.CreateUser(req.User, req.Password)
+	if errors.Is(err, store.ErrWrongPassword) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	if err != nil {
 		utils.RenderError(w, err, http.StatusInternalServerError)
 		return

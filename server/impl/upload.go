@@ -165,13 +165,24 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		if thumbErr != nil {
 			logger.ErrorF("Creating thumbnail failed for file %s, %v", relPath, thumbErr)
 		}
-		// 3. Run document-to-trash detection only after both metadata and thumbnail have completed,
-		// so the file, metadata, and thumbnail are all moved to Trash/ together.
-		if metaErr == nil && thumbErr == nil && mediatype == mediatypes.Image && config.DocumentToTrashEnabled && !saveToTrash {
+		// 3. Run document detection for ALL images after both metadata and thumbnail have completed.
+		// Documents go to Trash; non-documents stay in normal folders.
+		if metaErr == nil && thumbErr == nil && mediatype == mediatypes.Image && config.DocumentToTrashEnabled {
 			fullPath := filepath.Join(userDir, relPath)
+			var isDocument bool
 			if config.DocumentClassifierPath != "" {
-				RunDocumentClassifierSync(fullPath, userDir, relPath)
-			} else if LooksLikeDocument(fullPath) {
+				isDocument = IsDocumentByClassifier(fullPath)
+			} else {
+				isDocument = LooksLikeDocument(fullPath)
+			}
+
+			if saveToTrash && !isDocument {
+				// File was uploaded to Trash but is NOT a document - restore it
+				// relPath is "Trash/year/month/file", need to extract the path without Trash prefix
+				relPathWithoutTrash := strings.TrimPrefix(relPath, paths.TrashFolder+"/")
+				trash.RestoreFromTrash(userDir, relPathWithoutTrash)
+			} else if !saveToTrash && isDocument {
+				// File was uploaded normally but IS a document - move to Trash
 				trash.MoveToTrash(userDir, relPath)
 			}
 		}
