@@ -23,7 +23,10 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/paths"
+	"github.com/takecontrolsoft/sync_server/server/trash"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
@@ -43,13 +46,18 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		userFromClient := result.UserData.User
 		deviceId := strings.TrimSpace(result.UserData.DeviceId)
 		folder := result.Folder
-		userId := ResolveToUserId(userFromClient)
+		userId := auth.ResolveUserId(userFromClient)
 		if userId == "" {
 			userId = userFromClient
 		}
 		userDir := filepath.Join(config.UploadDirectory, userId)
+		if paths.ShouldSkipInFolderListing(folder) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(files)
+			return
+		}
 		if deviceId == "" {
-			// All devices for this account: list files from each device with "deviceId/path" prefix
 			entries, errRead := os.ReadDir(userDir)
 			if errRead == nil {
 				for _, e := range entries {
@@ -58,8 +66,8 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 					}
 					devId := e.Name()
 					userDirName := filepath.Join(userDir, devId)
-					if folder == TrashFolder {
-						trashList, _ := ListTrashFiles(userDirName)
+					if folder == paths.TrashFolder {
+						trashList, _ := trash.ListFiles(userDirName)
 						for _, p := range trashList {
 							files = append(files, devId+"/"+p)
 						}
@@ -68,9 +76,14 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 						dirEntries, err := os.ReadDir(dirName)
 						if err == nil {
 							for _, entry := range dirEntries {
-								if !entry.IsDir() {
-									files = append(files, devId+"/"+filepath.Join(folder, entry.Name()))
+								if entry.IsDir() {
+									continue
 								}
+								entryRel := filepath.Join(folder, entry.Name())
+								if paths.ShouldSkipInFolderListing(entryRel) {
+									continue
+								}
+								files = append(files, devId+"/"+paths.Normalize(entryRel))
 							}
 						}
 					}
@@ -78,17 +91,21 @@ func GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			userDirName := filepath.Join(userDir, deviceId)
-			if folder == TrashFolder {
-				files, _ = ListTrashFiles(userDirName)
+			if folder == paths.TrashFolder {
+				files, _ = trash.ListFiles(userDirName)
 			} else {
 				dirName := filepath.Join(userDirName, folder)
 				entries, err := os.ReadDir(dirName)
 				if err == nil {
 					for _, entry := range entries {
-						if !entry.IsDir() {
-							file := filepath.Join(folder, entry.Name())
-							files = append(files, file)
+						if entry.IsDir() {
+							continue
 						}
+						file := filepath.Join(folder, entry.Name())
+						if paths.ShouldSkipInFolderListing(file) {
+							continue
+						}
+						files = append(files, paths.Normalize(file))
 					}
 				}
 			}

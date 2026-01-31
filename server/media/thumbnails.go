@@ -13,7 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package impl
+// Package media provides media processing functionality including
+// thumbnail generation and metadata extraction.
+package media
 
 import (
 	"bytes"
@@ -24,14 +26,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/disintegration/imaging"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 
-	"github.com/disintegration/imaging"
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/paths"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
+// GetFrameFromVideo extracts a single frame from a video file using ffmpeg.
 func GetFrameFromVideo(inFileName string, frameNum int) io.Reader {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(inFileName).
@@ -45,12 +49,14 @@ func GetFrameFromVideo(inFileName string, frameNum int) io.Reader {
 	return buf
 }
 
+// BuildVideoThumbnail creates a thumbnail for a video file by extracting a frame.
+// Returns the path to the created thumbnail.
 func BuildVideoThumbnail(userName string, deviceId string, file string) (string, error) {
 	// Normalize so Trash paths use forward slashes and ThumbnailBasePath puts thumb under Trash/Thumbnails.
-	file = filepath.ToSlash(file)
+	file = paths.Normalize(file)
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	// Use ThumbnailBasePath so uploads-to-Trash and /img thumbnail lookup use the same path.
-	thumbnailPath := ThumbnailBasePath(userDirName, file) + ".jpeg"
+	thumbnailPath := paths.ThumbnailBasePath(userDirName, file) + ".jpeg"
 	filePath := filepath.Join(userDirName, file)
 
 	reader := GetFrameFromVideo(filePath, 5)
@@ -63,8 +69,6 @@ func BuildVideoThumbnail(userName string, deviceId string, file string) (string,
 	// Resize and crop the srcImage to fill the 250x250px area.
 	thumbnail := imaging.Fill(resized, 250, 250, imaging.Center, imaging.Lanczos)
 
-	// draw the srcImage over the backgroundImage at the (50, 50) position with opacity=0.5
-	// playImage := imaging.OverlayCenter(thumbnail, image.Rect(0, 0, 50, 50), 0.5)
 	err = os.MkdirAll(filepath.Dir(thumbnailPath), os.ModePerm)
 	if err != nil {
 		return "", err
@@ -77,9 +81,9 @@ func BuildVideoThumbnail(userName string, deviceId string, file string) (string,
 	return thumbnailPath, nil
 }
 
-// applyEXIFOrientation transforms the image according to EXIF Orientation (1-8).
+// ApplyEXIFOrientation transforms the image according to EXIF Orientation (1-8).
 // imaging: Rotate90 = 90° CCW, Rotate270 = 90° CW.
-func applyEXIFOrientation(src image.Image, orientation int) image.Image {
+func ApplyEXIFOrientation(src image.Image, orientation int) image.Image {
 	switch orientation {
 	case 1:
 		return src
@@ -102,12 +106,14 @@ func applyEXIFOrientation(src image.Image, orientation int) image.Image {
 	}
 }
 
+// BuildImageThumbnail creates a thumbnail for an image file.
+// Applies EXIF orientation correction. Returns the path to the created thumbnail.
 func BuildImageThumbnail(userName string, deviceId string, file string) (string, error) {
 	// Normalize so Trash paths use forward slashes and ThumbnailBasePath puts thumb under Trash/Thumbnails.
-	file = filepath.ToSlash(file)
+	file = paths.Normalize(file)
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	// Use ThumbnailBasePath so uploads-to-Trash and /img thumbnail lookup use the same path.
-	thumbnailPath := ThumbnailBasePath(userDirName, file)
+	thumbnailPath := paths.ThumbnailBasePath(userDirName, file)
 	filePath := filepath.Join(userDirName, file)
 
 	src, err := utils.GetImageFromFilePath(filePath)
@@ -116,9 +122,9 @@ func BuildImageThumbnail(userName string, deviceId string, file string) (string,
 	}
 
 	// Apply EXIF orientation so thumbnail is displayed correctly (e.g. phone photos rotated 90°).
-	metadataPath := MetadataPath(userDirName, file)
+	metadataPath := paths.MetadataPath(userDirName, file)
 	orientation := GetOrientationFromMetadata(metadataPath)
-	src = applyEXIFOrientation(src, orientation)
+	src = ApplyEXIFOrientation(src, orientation)
 
 	// Resize srcImage to width = 300px preserving the aspect ratio.
 	resized := imaging.Resize(src, 300, 0, imaging.Lanczos)
@@ -137,6 +143,8 @@ func BuildImageThumbnail(userName string, deviceId string, file string) (string,
 	return thumbnailPath, nil
 }
 
+// BuildAudioThumbnail creates a thumbnail for an audio file.
+// Currently returns empty (no thumbnail generated for audio).
 func BuildAudioThumbnail(userName string, deviceId string, file string) (string, error) {
 	return "", nil
 }

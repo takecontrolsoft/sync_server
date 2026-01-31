@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
@@ -48,7 +49,7 @@ func GetStreamHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}

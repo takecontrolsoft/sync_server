@@ -25,7 +25,9 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/takecontrolsoft/go_multi_log/logger"
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/paths"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
@@ -50,7 +52,7 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		userFromClient := result.User
 		deviceId := strings.TrimSpace(result.DeviceId)
-		userId := ResolveToUserId(userFromClient)
+		userId := auth.ResolveUserId(userFromClient)
 		if userId == "" {
 			userId = userFromClient
 		}
@@ -58,7 +60,6 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		separator := string(os.PathSeparator)
 
 		if deviceId == "" {
-			// All devices for this account: list device dirs, walk each, merge folders
 			entries, errRead := os.ReadDir(userDir)
 			if errRead != nil {
 				logger.ErrorF("Reading user dir %s failed %v", userDir, errRead.Error())
@@ -76,6 +77,9 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 						}
 						rel := strings.TrimLeft(strings.TrimPrefix(path, dirName), separator)
 						if rel == "" || rel == devId {
+							return nil
+						}
+						if paths.ShouldSkipInFolderListing(rel) {
 							return nil
 						}
 						if len(rel) == 4 {
@@ -108,6 +112,9 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 				if d != nil && d.IsDir() && deviceId != d.Name() {
 					fld := strings.Replace(strings.TrimRight(path, separator), dirName, "", 1)
 					fld = strings.TrimLeft(fld, separator)
+					if paths.ShouldSkipInFolderListing(fld) {
+						return nil
+					}
 					logger.InfoF("File path %s", path)
 					logger.InfoF("File path ends with %s", fld)
 					if len(fld) == 4 {

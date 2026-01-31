@@ -31,8 +31,12 @@ import (
 
 	"github.com/flytam/filenamify"
 	"github.com/takecontrolsoft/go_multi_log/logger"
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/media"
 	"github.com/takecontrolsoft/sync_server/server/mediatypes"
+	"github.com/takecontrolsoft/sync_server/server/paths"
+	"github.com/takecontrolsoft/sync_server/server/trash"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
@@ -73,7 +77,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderError(w, MissingUser, http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}
@@ -132,17 +136,17 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var relPath string
 	if saveToTrash {
-		relPath = filepath.Join(TrashFolder, year, month, filename)
+		relPath = filepath.Join(paths.TrashFolder, year, month, filename)
 	} else {
 		relPath = filepath.Join(year, month, filename)
 	}
 	// Use forward slashes so ThumbnailBasePath/MetadataPath recognize Trash paths on all OSes.
-	relPath = filepath.ToSlash(relPath)
+	relPath = paths.Normalize(relPath)
 
 	go func() {
 		userDir := filepath.Join(config.UploadDirectory, userId, deviceId)
 		// 1. Wait for metadata creation to complete.
-		_, metaErr := ExtractMetadata(userId, deviceId, relPath)
+		_, metaErr := media.ExtractMetadata(userId, deviceId, relPath)
 		if metaErr != nil {
 			logger.ErrorF("Creating metadata failed for file %s, %v", relPath, metaErr)
 		}
@@ -150,11 +154,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		var thumbErr error
 		switch mediatype {
 		case mediatypes.Video:
-			_, thumbErr = BuildVideoThumbnail(userId, deviceId, relPath)
+			_, thumbErr = media.BuildVideoThumbnail(userId, deviceId, relPath)
 		case mediatypes.Image:
-			_, thumbErr = BuildImageThumbnail(userId, deviceId, relPath)
+			_, thumbErr = media.BuildImageThumbnail(userId, deviceId, relPath)
 		case mediatypes.Audio:
-			_, thumbErr = BuildAudioThumbnail(userId, deviceId, relPath)
+			_, thumbErr = media.BuildAudioThumbnail(userId, deviceId, relPath)
 		default:
 			logger.Info("Unknown media type for thumbnail")
 		}
@@ -168,7 +172,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			if config.DocumentClassifierPath != "" {
 				RunDocumentClassifierSync(fullPath, userDir, relPath)
 			} else if LooksLikeDocument(fullPath) {
-				MoveRelativePathToTrash(userDir, relPath)
+				trash.MoveToTrash(userDir, relPath)
 			}
 		}
 	}()
@@ -181,7 +185,7 @@ func createNewFile(mp *multipart.Part, w http.ResponseWriter,
 
 	dirName := filepath.Join(config.UploadDirectory, userId, deviceId, year, month)
 	if saveToTrash {
-		dirName = filepath.Join(config.UploadDirectory, userId, deviceId, TrashFolder, year, month)
+		dirName = filepath.Join(config.UploadDirectory, userId, deviceId, paths.TrashFolder, year, month)
 	}
 	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {

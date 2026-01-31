@@ -24,11 +24,12 @@ import (
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/trash"
 )
 
 // RunDocumentClassifierAsync runs the configured Python/exe classifier in a new
 // goroutine. After sync, if stdout contains "document", the file is moved to Trash.
-// fullPath is the absolute path to the image; userDir and relPath are for MoveRelativePathToTrash.
+// fullPath is the absolute path to the image; userDir and relPath are for trash.MoveToTrash.
 func RunDocumentClassifierAsync(fullPath, userDir, relPath string) {
 	if config.DocumentClassifierPath == "" {
 		return
@@ -56,7 +57,7 @@ func RunDocumentClassifierSyncReturnsMoved(fullPath, userDir, relPath string) bo
 		return false
 	}
 	if strings.Contains(strings.ToLower(string(out)), "document") {
-		MoveRelativePathToTrash(userDir, relPath)
+		trash.MoveToTrash(userDir, relPath)
 		return true
 	}
 	return false

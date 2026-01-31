@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package impl
+package media
 
 import (
 	"encoding/json"
@@ -22,13 +22,15 @@ import (
 
 	"github.com/barasher/go-exiftool"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/paths"
 )
 
+// ExtractMetadata extracts EXIF metadata from a media file using exiftool
+// and saves it as JSON. Returns the path to the created metadata file.
 func ExtractMetadata(userName string, deviceId string, file string) (string, error) {
-
 	userDirName := filepath.Join(config.UploadDirectory, userName, deviceId)
 	// Use MetadataPath so Trash files get metadata under Trash/Metadata/, not Metadata/Trash/.
-	metadataPath := MetadataPath(userDirName, file)
+	metadataPath := paths.MetadataPath(userDirName, file)
 	filePath := filepath.Join(userDirName, file)
 
 	var et *exiftool.Exiftool

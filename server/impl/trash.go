@@ -17,48 +17,16 @@ package impl
 
 import (
 	"encoding/json"
-	"io/fs"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/paths"
+	"github.com/takecontrolsoft/sync_server/server/trash"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
-
-const TrashFolder = "Trash"
-
-// trashPrefix is "Trash/" for path logic (API uses forward slashes).
-const trashPrefix = TrashFolder + "/"
-
-// ThumbnailBasePath returns the full path to the thumbnail file (without .jpeg extension for videos).
-// For files in Trash, thumbnails live under Trash/Thumbnails/ (not Thumbnails/Trash/); otherwise under Thumbnails/.
-func ThumbnailBasePath(userDir, file string) string {
-	// Normalize to forward slashes so Trash is detected on all OSes (Windows uses backslash).
-	file = filepath.ToSlash(file)
-	file = strings.TrimSpace(file)
-	// First path segment is "Trash" (case-insensitive) -> store under Trash/Thumbnails, not Thumbnails/Trash.
-	parts := strings.Split(file, "/")
-	if len(parts) > 0 && strings.EqualFold(parts[0], TrashFolder) {
-		rest := strings.Join(parts[1:], "/")
-		return filepath.Join(userDir, TrashFolder, "Thumbnails", rest)
-	}
-	return filepath.Join(userDir, "Thumbnails", file)
-}
-
-// MetadataPath returns the full path to the metadata JSON file.
-// For files in Trash, metadata lives under Trash/Metadata/; otherwise under Metadata/.
-func MetadataPath(userDir, file string) string {
-	file = filepath.ToSlash(file)
-	file = strings.TrimSpace(file)
-	parts := strings.Split(file, "/")
-	if len(parts) > 0 && strings.EqualFold(parts[0], TrashFolder) {
-		rest := strings.Join(parts[1:], "/")
-		return filepath.Join(userDir, TrashFolder, "Metadata", rest+".json")
-	}
-	return filepath.Join(userDir, "Metadata", file+".json")
-}
 
 type moveToTrashData struct {
 	UserData userData
@@ -70,8 +38,6 @@ type restoreData struct {
 	Files    []string
 }
 
-// MoveToTrashHandler moves files (and their thumbnails and metadata) to Trash.
-// POST body: { "UserData": { "User": "", "DeviceId": "" }, "Files": ["2024/01/photo.jpg", ...] }
 func MoveToTrashHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -88,7 +54,7 @@ func MoveToTrashHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}
@@ -98,62 +64,16 @@ func MoveToTrashHandler(w http.ResponseWriter, r *http.Request) {
 		if file == "" || strings.Contains(file, "..") {
 			continue
 		}
-		// Skip if already in Trash (API uses forward slash: "Trash/...")
-		if strings.HasPrefix(file, trashPrefix) || file == TrashFolder {
+		if strings.HasPrefix(file, trash.TrashPrefix()) || file == paths.TrashFolder {
 			continue
 		}
-		originalPath := filepath.Join(userDir, file)
-		trashPath := filepath.Join(userDir, TrashFolder, file)
-
-		// Get thumbnail extension while main file still exists (videos use .jpeg).
-		thumbExt, _ := utils.GetThumbnailFileAddedExtension(originalPath)
-		thumbSrc := filepath.Join(userDir, "Thumbnails", file) + thumbExt
-		thumbDst := filepath.Join(userDir, TrashFolder, "Thumbnails", file) + thumbExt
-
-		// Move main file first; then thumbnail and metadata (no-op if src missing).
-		if err := moveFile(originalPath, trashPath); err != nil {
-			continue
-		}
-		_ = moveFile(thumbSrc, thumbDst)
-		metaSrc := filepath.Join(userDir, "Metadata", file+".json")
-		metaDst := filepath.Join(userDir, TrashFolder, "Metadata", file+".json")
-		_ = moveFile(metaSrc, metaDst)
+		_ = trash.MoveWithAssociatedFiles(userDir, file)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
-// MoveRelativePathToTrash moves one file (and its thumbnail and metadata) from
-// the normal folder to Trash. relPath is e.g. "2024/01/photo.jpg". No-op if
-// relPath is already under Trash. Used by upload when document detection is enabled.
-func MoveRelativePathToTrash(userDir, relPath string) {
-	if relPath == "" || strings.Contains(relPath, "..") {
-		return
-	}
-	// Skip if already in Trash; accept both "Trash/" and OS separator
-	if strings.HasPrefix(relPath, trashPrefix) || relPath == TrashFolder {
-		return
-	}
-	if strings.HasPrefix(relPath, TrashFolder+string(os.PathSeparator)) {
-		return
-	}
-	originalPath := filepath.Join(userDir, relPath)
-	trashPath := filepath.Join(userDir, TrashFolder, relPath)
-	thumbExt, _ := utils.GetThumbnailFileAddedExtension(originalPath)
-	thumbSrc := filepath.Join(userDir, "Thumbnails", relPath) + thumbExt
-	thumbDst := filepath.Join(userDir, TrashFolder, "Thumbnails", relPath) + thumbExt
-	if moveFile(originalPath, trashPath) != nil {
-		return
-	}
-	_ = moveFile(thumbSrc, thumbDst)
-	metaSrc := filepath.Join(userDir, "Metadata", relPath+".json")
-	metaDst := filepath.Join(userDir, TrashFolder, "Metadata", relPath+".json")
-	_ = moveFile(metaSrc, metaDst)
-}
-
-// RestoreHandler moves files from Trash back to their original folder (by path).
-// POST body: { "UserData": { "User": "", "DeviceId": "" }, "Files": ["Trash/2024/01/photo.jpg", ...] }
 func RestoreHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -170,82 +90,23 @@ func RestoreHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}
 	userDir := filepath.Join(config.UploadDirectory, userId, deviceId)
-	// Use package trashPrefix "Trash/" — API always sends forward slashes.
 
 	for _, file := range result.Files {
 		if file == "" || strings.Contains(file, "..") {
 			continue
 		}
-		if !strings.HasPrefix(file, trashPrefix) {
+		if !strings.HasPrefix(file, trash.TrashPrefix()) {
 			continue
 		}
-		restorePath := strings.TrimPrefix(file, trashPrefix)
-		trashFilePath := filepath.Join(userDir, TrashFolder, restorePath)
-		originalFilePath := filepath.Join(userDir, restorePath)
-
-		// Move main file back
-		if err := moveFile(trashFilePath, originalFilePath); err != nil {
-			continue
-		}
-
-		// Move thumbnail back from Trash/Thumbnails
-		thumbExt, _ := utils.GetThumbnailFileAddedExtension(originalFilePath)
-		thumbTrash := filepath.Join(userDir, TrashFolder, "Thumbnails", restorePath) + thumbExt
-		thumbOriginal := filepath.Join(userDir, "Thumbnails", restorePath) + thumbExt
-		_ = moveFile(thumbTrash, thumbOriginal)
-
-		// Move metadata back from Trash/Metadata
-		metaTrash := filepath.Join(userDir, TrashFolder, "Metadata", restorePath+".json")
-		metaOriginal := filepath.Join(userDir, "Metadata", restorePath+".json")
-		_ = moveFile(metaTrash, metaOriginal)
+		restorePath := strings.TrimPrefix(file, trash.TrashPrefix())
+		_ = trash.RestoreFromTrash(userDir, restorePath)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-}
-
-// moveFile moves a file, creating parent dirs of dst. No-op if src does not exist.
-func moveFile(src, dst string) error {
-	if _, err := os.Stat(src); os.IsNotExist(err) {
-		return nil
-	}
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
-		return err
-	}
-	return os.Rename(src, dst)
-}
-
-// ListTrashFiles returns relative paths of main files under userDir/Trash (e.g. "Trash/2024/01/photo.jpg").
-// Skips Trash/Thumbnails and Trash/Metadata so only media files are listed.
-func ListTrashFiles(userDir string) ([]string, error) {
-	var files []string
-	trashDir := filepath.Join(userDir, TrashFolder)
-	if _, err := os.Stat(trashDir); os.IsNotExist(err) {
-		return files, nil
-	}
-	err := filepath.WalkDir(trashDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		rel, err := filepath.Rel(userDir, path)
-		if err != nil {
-			return nil
-		}
-		rel = filepath.ToSlash(rel)
-		// Only list main files; skip Trash/Thumbnails/... and Trash/Metadata/...
-		if strings.HasPrefix(rel, TrashFolder+"/Thumbnails/") || strings.HasPrefix(rel, TrashFolder+"/Metadata/") {
-			return nil
-		}
-		files = append(files, rel)
-		return nil
-	})
-	return files, err
 }

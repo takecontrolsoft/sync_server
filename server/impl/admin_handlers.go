@@ -24,7 +24,11 @@ import (
 	"strings"
 
 	"github.com/takecontrolsoft/go_multi_log/logger"
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/media"
+	"github.com/takecontrolsoft/sync_server/server/paths"
+	"github.com/takecontrolsoft/sync_server/server/trash"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
@@ -38,10 +42,10 @@ func ListAllRelativeFiles(userDir string) ([]string, error) {
 		}
 		if d.IsDir() {
 			rel, _ := filepath.Rel(userDir, path)
-			rel = filepath.ToSlash(rel)
+			rel = paths.Normalize(rel)
 			// Skip walking into Trash, Thumbnails, Metadata
-			if rel == TrashFolder || rel == "Thumbnails" || rel == "Metadata" ||
-				strings.HasPrefix(rel, TrashFolder+"/") || strings.HasPrefix(rel, "Thumbnails/") || strings.HasPrefix(rel, "Metadata/") {
+			if rel == paths.TrashFolder || rel == paths.ThumbnailsFolder || rel == paths.MetadataFolder ||
+				strings.HasPrefix(rel, paths.TrashFolder+"/") || strings.HasPrefix(rel, paths.ThumbnailsFolder+"/") || strings.HasPrefix(rel, paths.MetadataFolder+"/") {
 				return filepath.SkipDir
 			}
 			return nil
@@ -50,7 +54,7 @@ func ListAllRelativeFiles(userDir string) ([]string, error) {
 		if err != nil {
 			return nil
 		}
-		files = append(files, filepath.ToSlash(rel))
+		files = append(files, paths.Normalize(rel))
 		return nil
 	})
 	return files, err
@@ -76,7 +80,7 @@ func RegenerateThumbnailsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}
@@ -88,18 +92,18 @@ func RegenerateThumbnailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var regenerated int
 	for _, rel := range all {
-		if strings.HasPrefix(rel, TrashFolder+"/") || rel == TrashFolder {
+		if strings.HasPrefix(rel, paths.TrashFolder+"/") || rel == paths.TrashFolder {
 			continue
 		}
 		ext := strings.ToLower(filepath.Ext(rel))
-		if IsImagePath(rel) {
-			if _, err := BuildImageThumbnail(userId, deviceId, rel); err != nil {
+		if paths.IsImagePath(rel) {
+			if _, err := media.BuildImageThumbnail(userId, deviceId, rel); err != nil {
 				logger.ErrorF("Regenerate thumbnail %s: %v", rel, err)
 			} else {
 				regenerated++
 			}
 		} else if ext == ".mp4" || ext == ".mov" || ext == ".avi" || ext == ".mkv" || ext == ".webm" {
-			if _, err := BuildVideoThumbnail(userId, deviceId, rel); err != nil {
+			if _, err := media.BuildVideoThumbnail(userId, deviceId, rel); err != nil {
 				logger.ErrorF("Regenerate video thumbnail %s: %v", rel, err)
 			} else {
 				regenerated++
@@ -131,13 +135,13 @@ func CleanOrphanThumbnailsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}
 	userDir := filepath.Join(config.UploadDirectory, userId, deviceId)
-	removed := cleanOrphanThumbnailsInDir(userDir, "Thumbnails")
-	removed += cleanOrphanThumbnailsInDir(userDir, TrashFolder+"/Thumbnails")
+	removed := cleanOrphanThumbnailsInDir(userDir, paths.ThumbnailsFolder)
+	removed += cleanOrphanThumbnailsInDir(userDir, paths.TrashFolder+"/"+paths.ThumbnailsFolder)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]int{"Removed": removed})
@@ -150,7 +154,7 @@ func cleanOrphanThumbnailsInDir(userDir, thumbSubdir string) int {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return 0
 	}
-	prefix := filepath.ToSlash(thumbSubdir) + "/"
+	prefix := paths.Normalize(thumbSubdir) + "/"
 	var removed int
 	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
@@ -160,7 +164,7 @@ func cleanOrphanThumbnailsInDir(userDir, thumbSubdir string) int {
 		if err != nil {
 			return nil
 		}
-		rel = filepath.ToSlash(rel)
+		rel = paths.Normalize(rel)
 		if !strings.HasPrefix(rel, prefix) {
 			return nil
 		}
@@ -169,8 +173,8 @@ func cleanOrphanThumbnailsInDir(userDir, thumbSubdir string) int {
 			sourceRel = strings.TrimSuffix(sourceRel, ".jpeg")
 		}
 		var sourcePath string
-		if strings.HasPrefix(thumbSubdir, TrashFolder) {
-			sourcePath = filepath.Join(userDir, TrashFolder, sourceRel)
+		if strings.HasPrefix(thumbSubdir, paths.TrashFolder) {
+			sourcePath = filepath.Join(userDir, paths.TrashFolder, sourceRel)
 		} else {
 			sourcePath = filepath.Join(userDir, sourceRel)
 		}
@@ -183,10 +187,10 @@ func cleanOrphanThumbnailsInDir(userDir, thumbSubdir string) int {
 		}
 		removed++
 		var metaPath string
-		if strings.HasPrefix(thumbSubdir, TrashFolder) {
-			metaPath = MetadataPath(userDir, TrashFolder+"/"+sourceRel)
+		if strings.HasPrefix(thumbSubdir, paths.TrashFolder) {
+			metaPath = paths.MetadataPath(userDir, paths.TrashFolder+"/"+sourceRel)
 		} else {
-			metaPath = MetadataPath(userDir, sourceRel)
+			metaPath = paths.MetadataPath(userDir, sourceRel)
 		}
 		_ = os.Remove(metaPath)
 		return nil
@@ -215,7 +219,7 @@ func RunDocumentDetectionHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userId := ResolveToUserId(userFromClient)
+	userId := auth.ResolveUserId(userFromClient)
 	if userId == "" {
 		userId = userFromClient
 	}
@@ -233,10 +237,10 @@ func RunDocumentDetectionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var moved int
 	for _, rel := range all {
-		if strings.HasPrefix(rel, TrashFolder+"/") || rel == TrashFolder {
+		if strings.HasPrefix(rel, paths.TrashFolder+"/") || rel == paths.TrashFolder {
 			continue
 		}
-		if !IsImagePath(rel) {
+		if !paths.IsImagePath(rel) {
 			continue
 		}
 		fullPath := filepath.Join(userDir, rel)
@@ -247,7 +251,7 @@ func RunDocumentDetectionHandler(w http.ResponseWriter, r *http.Request) {
 		if classifierMoved {
 			moved++
 		} else if LooksLikeDocument(fullPath) {
-			MoveRelativePathToTrash(userDir, rel)
+			trash.MoveToTrash(userDir, rel)
 			moved++
 		}
 	}

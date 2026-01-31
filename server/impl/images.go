@@ -29,7 +29,10 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/go-errors/errors"
+	"github.com/takecontrolsoft/sync_server/server/auth"
 	"github.com/takecontrolsoft/sync_server/server/config"
+	"github.com/takecontrolsoft/sync_server/server/media"
+	"github.com/takecontrolsoft/sync_server/server/paths"
 	"github.com/takecontrolsoft/sync_server/server/utils"
 )
 
@@ -48,7 +51,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		userFromClient := result.UserData.User
 		deviceId := result.UserData.DeviceId
-		userId := ResolveToUserId(userFromClient)
+		userId := auth.ResolveUserId(userFromClient)
 		if userId == "" {
 			userId = userFromClient
 		}
@@ -70,7 +73,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 			utils.RenderError(w, err, http.StatusInternalServerError)
 			return
 		}
-		path = fmt.Sprintf("%s%s", ThumbnailBasePath(userDirName, file), thumbnailAddedExtension)
+		path = fmt.Sprintf("%s%s", paths.ThumbnailBasePath(userDirName, file), thumbnailAddedExtension)
 		src, err := utils.GetImageFromFilePath(path)
 		if err != nil {
 			utils.RenderError(w, err, http.StatusInternalServerError)
@@ -78,9 +81,9 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if quality == "high" {
-			metadataPath := MetadataPath(userDirName, file)
-			orientation := GetOrientationFromMetadata(metadataPath)
-			src = applyEXIFOrientation(src, orientation)
+			metadataPath := paths.MetadataPath(userDirName, file)
+			orientation := media.GetOrientationFromMetadata(metadataPath)
+			src = media.ApplyEXIFOrientation(src, orientation)
 			src = resizeMaxLongEdge(src, 1920)
 			w.Header().Set("Content-Type", "image/jpeg")
 			w.WriteHeader(http.StatusOK)
