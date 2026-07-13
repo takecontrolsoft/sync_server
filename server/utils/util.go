@@ -160,6 +160,21 @@ func GetThumbnailFileAddedExtension(filePath string) (string, error) {
 	return "", nil
 }
 
+// GetMediaTypeFromFile detects the media type (image/video/audio) of a file on
+// disk by inspecting its content, the same way the upload handler does.
+func GetMediaTypeFromFile(filePath string) (mediatypes.MediaType, error) {
+	reader, err := os.Open(filePath)
+	if err != nil {
+		logger.Error(err)
+		return mediatypes.Unknown, err
+	}
+	defer reader.Close()
+	b := bufio.NewReader(reader)
+	n, _ := b.Peek(512)
+	fileType := http.DetectContentType(n)
+	return GetMediaType(fileType), nil
+}
+
 func GetImageFromFilePath(filePath string) (image.Image, error) {
 	reader, err := os.Open(filePath)
 	if err != nil {

@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +28,7 @@ import (
 	"github.com/takecontrolsoft/go_multi_log/logger/loggers"
 	"github.com/takecontrolsoft/sync_server/server/config"
 	"github.com/takecontrolsoft/sync_server/server/host"
+	"github.com/takecontrolsoft/sync_server/server/impl"
 	"github.com/takecontrolsoft/sync_server/server/services"
 )
 
@@ -38,6 +40,9 @@ func main() {
 	var logLevel int
 	var authDBPath string
 	var documentToTrash bool
+	var regen bool
+	var regenUser string
+	var regenDevice string
 
 	portHelp := `TCP port number on witch the sync server can be reached. Defaults to 80.`
 	flag.IntVar(&port, "p", 8080, portHelp)
@@ -65,6 +70,26 @@ func main() {
 
 	documentToTrashHelp := `If set, document-like images (whiteboard, page, etc.) are moved to Trash after upload. Uses built-in heuristic; set SYNC_DOCUMENT_CLASSIFIER_PATH for Python classifier.`
 	flag.BoolVar(&documentToTrash, "document-to-trash", false, documentToTrashHelp)
+
+	regenHelp := `Regenerate the Metadata and Thumbnails for already uploaded files
+	instead of starting the server, then exit.
+	Requires -d (storage path), -user and -device.`
+	flag.BoolVar(&regen, "regen", false, regenHelp)
+	flag.StringVar(&regenUser, "user", "", "User name to regenerate Metadata/Thumbnails for. Used together with -regen.")
+	flag.StringVar(&regenDevice, "device", "", "Device id to regenerate Metadata/Thumbnails for. Used together with -regen.")
+
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Sync server - stores uploaded files and generates their Metadata and Thumbnails.")
+		fmt.Fprintln(os.Stderr, "\nUsage:")
+		fmt.Fprintln(os.Stderr, "  sync_server [options]")
+		fmt.Fprintln(os.Stderr, "\nOptions:")
+		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "\nExamples:")
+		fmt.Fprintln(os.Stderr, "  Start the server:")
+		fmt.Fprintln(os.Stderr, "    sync_server -p 3000 -d /photos/ -l /log/ -n 5")
+		fmt.Fprintln(os.Stderr, "\n  Regenerate Metadata and Thumbnails for existing files of a user/device, then exit:")
+		fmt.Fprintln(os.Stderr, "    sync_server -d /photos/ -regen -user John -device iPhone12")
+	}
 
 	flag.Parse()
 
@@ -113,6 +138,19 @@ func main() {
 	logger.InfoF(" - storage path = %s\n", config.UploadDirectory)
 	logger.InfoF(" - log path = %s\n", config.LogPath)
 	logger.InfoF(" - log level = %s\n", config.LogLevel.String())
+
+	if regen {
+		if regenUser == "" || regenDevice == "" {
+			logger.Fatal(fmt.Errorf("-user and -device are required when using -regen"))
+		}
+		logger.InfoF("Regenerating Metadata and Thumbnails for %s/%s ...", regenUser, regenDevice)
+		if _, err := impl.RegenerateForDevice(regenUser, regenDevice); err != nil {
+			logger.Fatal(err)
+		}
+		logger.Info("Regeneration finished.")
+		return
+	}
+
 	services.Load()
 	host.Run()
 }

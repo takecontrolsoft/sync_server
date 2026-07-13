@@ -20,6 +20,20 @@ or
 
 `bin/sync_server.exe -p 3000 -d /photos/ -l /log/ -n 5`
 
+## Regenerate Metadata and Thumbnails for existing files
+Rebuilds the `Metadata` and `Thumbnails` folders for every already uploaded file
+of a given user and device, then exits without starting the server. Existing
+files are overwritten. Requires `exiftool` (metadata) and `ffmpeg` (video
+thumbnails) to be installed on the machine.
+
+`bin/sync_server.exe -d C:\Users\{username}\Pictures\FileSyncTest\ -regen -user {userName} -device {deviceId}`
+
+or
+
+`bin/sync_server.exe -d /photos/ -regen -user {userName} -device {deviceId}`
+
+`-user` and `-device` are the folder names directly under the storage path (`-d`).
+
 ## To browse server
 http://localhost:3000/files
 
