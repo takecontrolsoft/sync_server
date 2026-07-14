@@ -21,6 +21,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/barasher/go-exiftool"
 	"github.com/takecontrolsoft/go_multi_log/logger"
@@ -105,6 +107,38 @@ func GetOrientationFromMetadata(metadataPath string) int {
 		if v >= 1 && v <= 8 {
 			return v
 		}
+	case string:
+		// exiftool returns Orientation as human-readable text by default
+		// (e.g. "Rotate 90 CW"), so map it back to the numeric EXIF value.
+		return orientationFromString(v)
+	}
+	return 1
+}
+
+// orientationFromString maps exiftool's human-readable Orientation (PrintConv)
+// text to the numeric EXIF value 1-8. It also accepts a plain numeric string
+// such as "6". Returns 1 (normal) when the value is unknown.
+func orientationFromString(s string) int {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "horizontal (normal)":
+		return 1
+	case "mirror horizontal":
+		return 2
+	case "rotate 180":
+		return 3
+	case "mirror vertical":
+		return 4
+	case "mirror horizontal and rotate 270 cw":
+		return 5
+	case "rotate 90 cw":
+		return 6
+	case "mirror horizontal and rotate 90 cw":
+		return 7
+	case "rotate 270 cw":
+		return 8
+	}
+	if n, err := strconv.Atoi(strings.TrimSpace(s)); err == nil && n >= 1 && n <= 8 {
+		return n
 	}
 	return 1
 }
